@@ -1,0 +1,187 @@
+import argparse
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+import json
+
+
+latest_predictions = pd.read_csv('latest_predictions.csv')
+
+cleaned_cov_matrix_np = np.load('cleaned_cov_matrix_np.npy')
+
+
+def optimize_portfolio_rolling(portfolio_size, lambda_val, latest_predictions, cov_matrix, investment_horizon, tolerance=1e-10):
+    """
+    Optimizes a portfolio using a rolling approach with dynamic bounds.
+
+    Args:
+        portfolio_size: The desired number of assets in the final portfolio.
+        lambda_val: The risk aversion parameter (lambda).
+        latest_predictions: DataFrame with 'ticker' and 'prediction' columns.
+        cov_matrix: NumPy array representing the covariance matrix.
+        investment_horizon: Investment horizon in months.
+        tolerance: Tolerance for numerical optimization.
+
+    Returns:
+        Dictionary containing optimization results or None if there are issues.
+    """
+    if lambda_val <= 0:
+        raise ValueError("lambda_val must be positive")
+
+    num_assets_universe = len(latest_predictions)
+    if cov_matrix.shape != (num_assets_universe, num_assets_universe):
+        raise ValueError("Inconsistent input shapes between covariance matrix and predictions")
+
+    if portfolio_size > num_assets_universe or portfolio_size <= 0:
+        raise ValueError("Invalid portfolio size")
+
+    # Create ticker to index mapping
+    tickers = latest_predictions['ticker'].tolist() if 'ticker' in latest_predictions else latest_predictions.index.tolist()
+    tickers_dict = {ticker: idx for idx, ticker in enumerate(tickers)}
+
+    selected_assets = []
+    all_selected_assets = []
+    all_weights = []
+    all_objective_values = []
+
+    def get_dynamic_bounds(current_size, target_size):
+        """
+        Returns appropriate bounds based on the current portfolio size.
+        """
+        if current_size == 1:
+            return [(1.0, 1.0)]  # First asset must be 100%
+        elif current_size == target_size:
+            return [(0.02, 0.15)] * current_size  # Final target bounds
+        else:
+            # Intermediate bounds - allow more flexibility
+            return [(0.0, 1.0)] * current_size
+
+    for k in range(portfolio_size):
+        best_objective_value = float('inf')
+        best_weights = None
+        best_new_asset = None
+
+        remaining_assets = list(set(tickers) - set(selected_assets))
+
+        for new_asset in remaining_assets:
+            current_portfolio = selected_assets + [new_asset]
+            selected_asset_indices = [tickers_dict[asset] for asset in current_portfolio]
+
+            # Get predictions
+            pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
+            if 'ticker' in latest_predictions:
+                selected_mu = latest_predictions.loc[
+                    latest_predictions['ticker'].isin(current_portfolio),
+                    pred_col
+                ].values
+            else:
+                selected_mu = latest_predictions.loc[current_portfolio, pred_col].values
+
+            selected_cov_matrix = cov_matrix[np.ix_(selected_asset_indices, selected_asset_indices)]
+
+            def objective_function(weights):
+                portfolio_return = np.dot(weights, selected_mu)
+                portfolio_variance = np.dot(weights.T, np.dot(selected_cov_matrix, weights))
+                return -(portfolio_return - (lambda_val / 2) * portfolio_variance)
+
+            constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+            bounds = get_dynamic_bounds(k + 1, portfolio_size)
+            initial_weights = np.array([1/(k+1)] * (k+1))
+
+            result = minimize(
+                objective_function,
+                initial_weights,
+                method='SLSQP',
+                bounds=bounds,
+                constraints=constraints,
+                options={'ftol': 1e-8}
+            )
+
+            if result.success and result.fun < best_objective_value:
+                best_objective_value = result.fun
+                best_weights = result.x.copy()
+                best_new_asset = new_asset
+                best_result = result
+
+        if best_new_asset is None:
+            break
+
+        selected_assets.append(best_new_asset)
+        all_selected_assets.append(selected_assets.copy())
+
+        best_weights[np.abs(best_weights) < tolerance] = 0
+        all_weights.append(best_weights)
+        all_objective_values.append(best_objective_value)
+
+    if not selected_assets:
+        return None
+
+    # Final optimization with target bounds
+    final_indices = [tickers_dict[asset] for asset in selected_assets]
+    final_mu = latest_predictions.loc[
+               latest_predictions['ticker' if 'ticker' in latest_predictions else 'index'].isin(selected_assets),
+               pred_col].values
+
+    final_cov = cov_matrix[np.ix_(final_indices, final_indices)]
+
+
+    final_result = minimize(
+        lambda w: -(np.dot(w, final_mu) - (lambda_val / 2) * np.dot(w.T, np.dot(final_cov, w))),
+        all_weights[-1],
+        method='SLSQP',
+        bounds=[(0.02, 0.15)] * len(selected_assets),
+        constraints={'type': 'eq', 'fun': lambda x: np.sum(x) - 1},
+        options={'ftol': 1e-8}
+    )
+
+    weights = final_result.x if final_result.success else all_weights[-1]
+    weights = weights.tolist()
+
+    return {
+        'selected_assets': selected_assets,
+        'weights': weights,
+        'optimal_value': final_result.fun if final_result.success else best_objective_value,
+        'all_selected_assets': all_selected_assets,
+        'all_weights': all_weights,
+        'all_objective_values': all_objective_values,
+        'success': final_result.success,
+        'message': final_result.message
+    }
+
+def convert_to_serializable(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, list):
+        return [convert_to_serializable(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: convert_to_serializable(value) for key, value in obj.items()}
+    else:
+        return obj
+
+if __name__ == "__main__":
+    try:
+        # Parse command-line arguments
+        parser = argparse.ArgumentParser(description="Optimize a portfolio based on inputs.")
+        parser.add_argument("lambda_val", type=float, help="Risk aversion parameter (lambda).")
+        parser.add_argument("investment_horizon", type=int, help="Investment horizon in months.")
+        parser.add_argument("portfolio_size", type=int, help="Desired number of assets in the portfolio.")
+        args = parser.parse_args()
+        # Run the optimization function
+        result = optimize_portfolio_rolling(
+            portfolio_size=args.portfolio_size,
+            lambda_val=args.lambda_val,
+            latest_predictions=latest_predictions,
+            cov_matrix=cleaned_cov_matrix_np,
+            investment_horizon=args.investment_horizon
+        )
+        keys_to_remove = ['optimal_value', 'all_selected_assets', 'all_objective_values', 'success', 'message', 'all_weights']
+        for key in keys_to_remove:
+            result.pop(key, None)  # Use pop to safely remove the key if it exists
+        # Debug optimization result
+        print(json.dumps(convert_to_serializable(result)))
+    except Exception as e:
+        # Print any errors that occur
+        print(f"Error: {str(e)}")
+        import sys
+        sys.exit(1)
+

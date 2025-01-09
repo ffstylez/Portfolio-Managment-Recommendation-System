@@ -1,0 +1,50 @@
+Stock Name,Stock Ticker,Category,Stock Explain,Resources
+Apple,AAPL,Technology,"Apple is a leading tech company known for its innovative products like the iPhone, Mac, and Apple Watch.",https://www.apple.com
+Google,GOOGL,Technology,"Google is a global technology company specializing in internet services like search, advertising, and cloud computing.",https://www.google.com
+Microsoft,MSFT,Technology,"Microsoft is a multinational company that develops software, hardware, and services, including Windows OS and Azure.",https://www.microsoft.com
+Nvidia,NVDA,Technology,"Nvidia is a leader in graphics processing units (GPUs) for gaming, professional visualization, data centers, and automotive.",https://www.nvidia.com
+TSMC,TSM,Technology,"TSMC is the world’s largest independent semiconductor foundry, producing chips for various industries.",https://www.tsmc.com
+Intel,INTC,Technology,"Intel designs and manufactures semiconductor chips, providing computing solutions for devices, servers, and more.",https://www.intel.com
+AMD,AMD,Technology,"AMD produces computer processors and related technologies for servers, PCs, and gaming consoles.",https://www.amd.com
+Cisco,CSCO,Technology,Cisco provides networking and cybersecurity solutions for enterprises and service providers worldwide.,https://www.cisco.com
+Oracle,ORCL,Technology,"Oracle offers database software, cloud services, and enterprise software products.",https://www.oracle.com
+Meta,META,Technology,Meta (formerly Facebook) is a social media and technology company that develops products for social networking and virtual reality.,https://www.meta.com
+Pfizer,PFE,Healthcare,"Pfizer is a global pharmaceutical company known for its vaccines, cancer treatments, and other medical products.",https://www.pfizer.com
+Johnson & Johnson,JNJ,Healthcare,"Johnson & Johnson is a healthcare company that develops pharmaceuticals, medical devices, and consumer health products.",https://www.jnj.com
+Merck,MRK,Healthcare,"Merck is a global pharmaceutical company focused on developing innovative medicines, vaccines, and animal health products.",https://www.merck.com
+AbbVie,ABBV,Healthcare,"AbbVie is a biopharmaceutical company that develops drugs for immunology, oncology, and neuroscience.",https://www.abbvie.com
+Bristol Myers Squibb,BMY,Healthcare,"Bristol Myers Squibb focuses on discovering and developing therapies for serious diseases, including cancer.",https://www.bms.com
+GlaxoSmithKline,GSK,Healthcare,"GlaxoSmithKline is a pharmaceutical company that develops vaccines, medicines, and consumer health products.",https://www.gsk.com
+Eli Lilly,LLY,Healthcare,"Eli Lilly is a global pharmaceutical company specializing in diabetes, cancer, and immunology treatments.",https://www.lilly.com
+CVS Health,CVS,Healthcare,CVS Health operates a chain of pharmacies and provides healthcare services and insurance.,https://www.cvshealth.com
+Amgen,AMGN,Healthcare,"Amgen is a biotechnology company focused on developing therapies for serious illnesses, including cancer and cardiovascular diseases.",https://www.amgen.com
+Medtronic,MDT,Healthcare,Medtronic is a global medical device company that provides innovative solutions for various medical conditions.,https://www.medtronic.com
+JPMorgan Chase,JPM,Finance,"JPMorgan Chase is a global financial services firm offering investment banking, asset management, and financial services.",https://www.jpmorganchase.com
+Bank of America,BAC,Finance,"Bank of America is a multinational banking and financial services company offering banking, investing, and wealth management services.",https://www.bankofamerica.com
+Wells Fargo,WFC,Finance,"Wells Fargo provides banking, investment, mortgage, and consumer finance services.",https://www.wellsfargo.com
+Citigroup,C,Finance,"Citigroup is a global financial services company providing banking, investment, and wealth management services.",https://www.citigroup.com
+Goldman Sachs,GS,Finance,"Goldman Sachs is an investment banking and financial services company offering services in investment management, securities, and more.",https://www.goldmansachs.com
+Morgan Stanley,MS,Finance,"Morgan Stanley is a global financial services firm providing investment banking, wealth management, and investment management services.",https://www.morganstanley.com
+U.S. Bancorp,USB,Finance,"U.S. Bancorp is the parent company of U.S. Bank, offering financial services including banking, mortgages, and credit cards.",https://www.usbank.com
+American Express,AXP,Finance,"American Express is a multinational financial services company, best known for its charge cards, credit cards, and travel services.",https://www.americanexpress.com
+Visa,V,Finance,Visa is a global payments technology company that facilitates digital payments and financial transactions across the world.,https://www.visa.com
+Mastercard,MA,Energy,"Mastercard is a global payments technology company offering electronic payment solutions, including credit and debit cards.",https://www.mastercard.com
+ExxonMobil,XOM,Energy,"ExxonMobil is one of the largest publicly traded oil and gas companies, involved in exploration, production, refining, and marketing.",https://www.exxonmobil.com
+TotalEnergies,TOT,Energy,"TotalEnergies is a multinational energy company engaged in oil and gas exploration, renewable energy, and sustainable solutions.",https://www.totalenergies.com
+Chevron,CVX,Energy,"Chevron is a multinational corporation involved in the exploration, production, and marketing of oil, gas, and energy products.",https://www.chevron.com
+BP,BP,Energy,"BP is an integrated oil and gas company, providing energy products and services across the globe.",https://www.bp.com
+Schlumberger,SLB,Energy,"Schlumberger is a leading provider of technology and services for oil and gas exploration, production, and processing.",https://www.slb.com
+Enbridge,ENB,Energy,Enbridge is a North American energy infrastructure company focused on oil and gas transportation and renewable energy projects.,https://www.enbridge.com
+Pioneer Natural Resources,PXD,Energy,Pioneer Natural Resources is a major oil and gas exploration and production company focused on the Permian Basin.,https://www.pxd.com
+ConocoPhillips,COP,Energy,"ConocoPhillips is a global energy company involved in oil and natural gas exploration, production, and marketing.",https://www.cop.com
+Occidental Petroleum,OXY,Energy,"Occidental Petroleum is an international oil and gas exploration and production company, also investing in carbon management and renewable energy.",https://www.oxy.com
+Coca-Cola,KO,Consumer Goods,"Coca-Cola is a multinational beverage company best known for its soft drinks, including Coca-Cola, Diet Coke, and Fanta.",https://www.coca-colacompany.com
+PepsiCo,PEP,Consumer Goods,"PepsiCo is a global food and beverage company, including products like Pepsi, Mountain Dew, Lay's, and Quaker Oats.",https://www.pepsico.com
+Procter & Gamble,PG,Consumer Goods,"Procter & Gamble is a multinational consumer goods company that produces health, hygiene, and home care products.",https://www.pg.com
+Target,TGT,Consumer Goods,"Target is a retail chain offering a wide range of products, including groceries, clothing, and electronics.",https://www.target.com
+Walmart,WMT,Consumer Goods,"Walmart is the world’s largest retailer, offering a wide range of products at affordable prices through its global network of stores and e-commerce platform.",https://www.walmart.com
+Costco,COST,Consumer Goods,"Costco is a global warehouse retailer that offers bulk goods, groceries, and various other products at competitive prices.",https://www.costco.com
+McDonalds,MCD,Consumer Goods,"McDonald's is a global fast-food restaurant chain known for its burgers, fries, and breakfast items.",https://www.mcdonalds.com
+Disney,DIS,Consumer Goods,"The Walt Disney Company is a diversified entertainment conglomerate involved in movies, TV, theme parks, and media networks.",https://www.thewaltdisneycompany.com
+Starbucks,SBUX,Consumer Goods,"Starbucks is a global coffeehouse chain known for its premium coffee drinks, pastries, and beverages.",https://www.starbucks.com
+Colgate-Palmolive,CL,Consumer Goods,"Colgate-Palmolive is a global consumer goods company that produces personal care, home care, and pet care products.",https://www.colgatepalmolive.com

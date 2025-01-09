@@ -1,0 +1,131 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+.stock-details-page {
+  background-image: url('/src/assets/stockdetailsBG.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+}
+
+.stock-details-container {
+  width: 100%; 
+  max-width: 900px;
+  margin: 20px;
+  background-color: rgba(255, 255, 255, 0.8); 
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stock-details-container h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.graph-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #e9f5f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.graph-section h3 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.graph-placeholder {
+  padding: 20px;
+  background-color: #d3d3d3;
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  border-radius: 8px;
+}
+
+.stock-info {
+  margin-top: 20px;
+}
+
+.stock-info p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.stock-info a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.stock-info a:hover {
+  text-decoration: underline;
+}
+
+.return-button {
+  margin-top: 20px;
+  padding: 8px 16px;
+  font-size: 14px; 
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: auto; 
+  display: inline-block; 
+  text-align: center; 
+}
+
+.return-button:hover {
+  background-color: #005f73;
+}
+
+.timeframe-selector {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px; 
+}
+
+.timeframe-selector label {
+  font-size: 16px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.timeframe-dropdown {
+  padding: 5px 8px;
+  font-size: 14px;
+  border: 2px solid #75C9C8;
+  border-radius: 4px;
+  background-color: #fff;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: auto;
+  display: inline-block;
+  max-width: 150px; 
+}
+
+.timeframe-dropdown:focus {
+  border-color: #009C94;
+  outline: none;
+}
+
+.timeframe-dropdown option {
+  font-size: 14px;
+}

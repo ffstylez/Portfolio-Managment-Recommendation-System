@@ -1,0 +1,46 @@
+/* NewsAndInsights.css */
+.news-and-insights {
+    margin: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .news-and-insights h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+  
+  .news-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .news-item {
+    background-color: #fff;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .news-item h3 {
+    font-size: 1.2em;
+    color: #007bff;
+  }
+  
+  .news-item h3 a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .news-item p {
+    font-size: 0.9em;
+    color: #333;
+  }
+  
+  .news-item small {
+    font-size: 0.8em;
+    color: #888;
+  }
+  

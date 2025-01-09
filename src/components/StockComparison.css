@@ -1,0 +1,116 @@
+.stock-comparison {
+  background-color: #f9f9f9;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto; 
+}
+
+.stock-comparison h3 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.input-field-group {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.input-field:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.add-button, .compare-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.add-button {
+  background-color: #008CBA;
+  color: white;
+}
+
+.compare-button {
+  background-color: #005f73;
+  color: white;
+}
+
+.add-button:hover, .compare-button:hover {
+  background-color: #007B9E;
+  transform: scale(1.05);
+}
+
+.add-button:active, .compare-button:active {
+  background-color: #005f73;
+}
+
+.add-button:disabled, .compare-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.loading {
+  font-size: 18px;
+  color: #888;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.comparison-table th, .comparison-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.comparison-table th {
+  background-color: #005f73;
+  color: white;
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+.error-message {
+    color: #d9534f;
+    font-size: 16px;
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: center;
+  }
+  
