@@ -1,34 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Papa from "papaparse";
 import axios from "axios";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import './StockComparison.css';
-
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import Select from "react-select"; // Import react-select
+import "./StockComparison.css";
+import { Line } from "react-chartjs-2";
 
 function StockComparison() {
-  const [stockSymbols, setStockSymbols] = useState([]);
+  const [stocks, setStocks] = useState([]); // To store the parsed stocks from CSV
+  const [stockSymbols, setStockSymbols] = useState([]); // Selected stock symbols
   const [comparisonData, setComparisonData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const stocks = [
-    { symbol: 'AAPL', name: 'Apple' },
-    { symbol: 'GOOGL', name: 'Google' },
-    { symbol: 'MSFT', name: 'Microsoft' },
-    { symbol: 'NVDA', name: 'Nvidia' },
-    { symbol: 'TSM', name: 'TSMC' },
-    { symbol: 'INTC', name: 'Intel' },
-    { symbol: 'AMD', name: 'AMD' },
-    { symbol: 'META', name: 'Meta' },
-    { symbol: 'PFE', name: 'Pfizer' },
-    { symbol: 'JNJ', name: 'Johnson & Johnson' },
-  ];
+  const TWELVE_DATA_API_KEY = "7b8e5ad369c2468aa1dbcc62e0af2280"; // Your Twelve Data API Key
+
+  // Load the CSV file
+  useEffect(() => {
+    const fetchCSV = async () => {
+      const csvUrl = "/data/stocks.csv"; // Path to your CSV file
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
+
+      // Parse the CSV file
+      Papa.parse(csvText, {
+        header: true,
+        complete: (result) => {
+          const stockList = result.data.map((row) => ({
+            value: row["Stock Ticker"],
+            label: `${row["Stock Name"]} (${row["Stock Ticker"]})`,
+          }));
+          setStocks(stockList);
+        },
+        error: (error) => {
+          console.error("Error parsing CSV:", error);
+        },
+      });
+    };
+
+    fetchCSV();
+  }, []);
 
   const fetchStockData = async () => {
-    if (stockSymbols.some(symbol => symbol.trim() === '')) {
-      setErrorMessage("Please select all stock symbols before comparing.");
+    if (stockSymbols.length === 0) {
+      setErrorMessage("Please select at least one stock before comparing.");
       return;
     }
 
@@ -36,95 +50,69 @@ function StockComparison() {
     setErrorMessage("");
 
     try {
-      const promises = stockSymbols.map((symbol) =>
-        axios.get(`https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=7b8e5ad369c2468aa1dbcc62e0af2280`)
+      const promises = stockSymbols.map((stock) =>
+        axios.get(
+          `https://api.twelvedata.com/time_series?symbol=${stock.value}&interval=1day&apikey=${TWELVE_DATA_API_KEY}`
+        )
       );
       const results = await Promise.all(promises);
-      const data = results.map((res, index) => ({
-        symbol: stockSymbols[index],
-        name: stocks.find((s) => s.symbol === stockSymbols[index])?.name || stockSymbols[index],
-        values: res.data.values.reverse(), // Reverse for chronological order
-      }));
-      setComparisonData(data);
+
+      const formattedData = results.map((response, index) => {
+        const data = response.data.values.reverse(); // Ensure ascending order
+        return {
+          label: stockSymbols[index].label,
+          data: data.map((point) => parseFloat(point.close)),
+          borderColor: `hsl(${index * 60}, 70%, 50%)`, // Dynamic color for each stock
+          fill: false,
+          xLabels: data.map((point) => point.datetime),
+        };
+      });
+
+      setComparisonData(formattedData);
     } catch (error) {
-      console.error("Error fetching stock data", error);
+      console.error("Error fetching stock data:", error);
       setErrorMessage("Failed to fetch stock data.");
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const handleAddStock = () => {
-    setStockSymbols([...stockSymbols, ""]);
-  };
-
-  const handleSymbolChange = (index, value) => {
-    const newSymbols = [...stockSymbols];
-    newSymbols[index] = value;
-    setStockSymbols(newSymbols);
-  };
-
-  // Prepare data for the chart
-  const chartData = {
-    labels: comparisonData[0]?.values.map((val) => val.datetime) || [], // Dates
-    datasets: comparisonData.map((stock, index) => ({
-      label: stock.name,
-      data: stock.values.map((val) => parseFloat(val.close)), // Close prices
-      borderColor: `rgba(${(index * 50) % 255}, ${(index * 100) % 255}, ${(index * 150) % 255}, 0.6)`,
-      backgroundColor: `rgba(${(index * 50) % 255}, ${(index * 100) % 255}, ${(index * 150) % 255}, 0.2)`,
-      borderWidth: 2,
-    })),
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Stock Comparison - Close Prices Over Time",
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: "Date",
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Close Price",
-        },
-      },
-    },
+    setLoading(false);
   };
 
   return (
     <div className="stock-comparison">
       <h3>Stock Comparison Tool</h3>
+
+      {/* Stock Selection */}
       {stockSymbols.map((symbol, index) => (
         <div key={index} className="input-field-group">
-          <select
-            value={symbol}
-            onChange={(e) => handleSymbolChange(index, e.target.value)}
-            className="input-field"
-          >
-            <option value="">Select a stock</option>
-            {stocks.map((stock) => (
-              <option key={stock.symbol} value={stock.symbol}>
-                {stock.name} ({stock.symbol})
-              </option>
-            ))}
-          </select>
+          <Select
+            options={stocks}
+            value={stockSymbols[index]} // Pre-selected stock
+            onChange={(selectedOption) => {
+              const newStockSymbols = [...stockSymbols];
+              newStockSymbols[index] = selectedOption;
+              setStockSymbols(newStockSymbols);
+            }}
+            placeholder="Search and select a stock..."
+            isClearable
+            className="react-select"
+          />
         </div>
       ))}
+
       <div className="buttons-container">
-        <button onClick={handleAddStock} className="add-button">Add Stock</button>
-        <button onClick={fetchStockData} disabled={loading} className="compare-button">Compare Stocks</button>
+        <button
+          onClick={() => setStockSymbols([...stockSymbols, null])} // Add a new stock selection field
+          className="add-button"
+        >
+          Add Stock
+        </button>
+        <button
+          onClick={fetchStockData}
+          disabled={loading}
+          className="compare-button"
+        >
+          Compare Stocks
+        </button>
       </div>
 
       {loading && <p className="loading">Loading data...</p>}
@@ -132,7 +120,25 @@ function StockComparison() {
 
       {comparisonData.length > 0 && (
         <div className="chart-container">
-          <Line data={chartData} options={chartOptions} />
+          <Line
+            data={{
+              labels: comparisonData[0].xLabels, // Use xLabels from the first stock
+              datasets: comparisonData,
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "bottom",
+                },
+              },
+              scales: {
+                x: { title: { display: true, text: "Date" } },
+                y: { title: { display: true, text: "Price (USD)" } },
+              },
+            }}
+          />
         </div>
       )}
     </div>

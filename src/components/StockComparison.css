@@ -8,7 +8,7 @@
   align-items: center;
   width: 100%;
   max-width: 800px;
-  margin: 0 auto; 
+  margin: 0 auto;
 }
 
 .stock-comparison h3 {
@@ -46,7 +46,8 @@
   margin-bottom: 20px;
 }
 
-.add-button, .compare-button {
+.add-button,
+.compare-button {
   padding: 10px 20px;
   font-size: 16px;
   border: none;
@@ -65,16 +66,19 @@
   color: white;
 }
 
-.add-button:hover, .compare-button:hover {
+.add-button:hover,
+.compare-button:hover {
   background-color: #007B9E;
   transform: scale(1.05);
 }
 
-.add-button:active, .compare-button:active {
+.add-button:active,
+.compare-button:active {
   background-color: #005f73;
 }
 
-.add-button:disabled, .compare-button:disabled {
+.add-button:disabled,
+.compare-button:disabled {
   background-color: #aaa;
   cursor: not-allowed;
 }
@@ -86,46 +90,47 @@
   margin-top: 20px;
 }
 
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  text-align: left;
-}
-
-.comparison-table th, .comparison-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-}
-
-.comparison-table th {
-  background-color: #005f73;
-  color: white;
-}
-
-.comparison-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
 .error-message {
-    color: #d9534f;
-    font-size: 16px;
-    margin-top: 15px;
-    font-weight: bold;
-    text-align: center;
-  }
-  .chart-container {
-    width: 100%;
-    max-width: 1000px; /* Increase the maximum width for the chart */
-    height: 500px; /* Set the height to make the chart more prominent */
-    margin: 20px auto; /* Add some spacing around the chart */
-    padding: 20px;
-    background-color: #ffffff; /* Ensure the background is white */
-    border-radius: 8px; /* Match the border radius with the rest of the design */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add a shadow for emphasis */
-  }
-  
-  .chart-container canvas {
-    width: 100%;
-    height: 100%;
-  }
-  
+  color: #d9534f;
+  font-size: 16px;
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 800px;
+  height: 450px; /* Slightly reduce the height */
+  margin: 10px auto; /* Reduce the margin around the chart */
+  padding: 10px; /* Reduce the padding inside the container */
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.chart-container canvas {
+  width: 100%;
+  height: 100%;
+}
+.react-select {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  margin-bottom: 15px;
+}
+
+.react-select__control {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.react-select__control:hover {
+  border-color: #4CAF50;
+}
+
+.react-select__menu {
+  border-radius: 5px;
+}
