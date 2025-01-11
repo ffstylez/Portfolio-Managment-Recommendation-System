@@ -9,7 +9,7 @@
   align-items: center;
   width: 100%;
   max-width: 600px;
-  margin: 0 auto; 
+  margin: 20px auto; /* Add margin for spacing */
 }
 
 .stock-calculator h3 {
@@ -52,6 +52,12 @@
   outline: none;
 }
 
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 button {
   background-color: #005f73;
   color: white;
@@ -67,15 +73,6 @@ button {
 button:hover {
   background-color: #008CBA;
   transform: scale(1.05);
-}
-
-button:active {
-  background-color: #005f73;
-}
-
-button:focus {
-  outline: none;
-  box-shadow: 0 0 10px rgba(216, 236, 165, 0.6);
 }
 
 button:disabled {
@@ -96,6 +93,14 @@ button:disabled {
   color: #888;
   text-align: center;
 }
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+
 .react-select {
   width: 100%; /* Ensures it adjusts with the container */
   max-width: 500px; /* Increase the maximum width */
@@ -107,7 +112,6 @@ button:disabled {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
-  width: 100%; /* Ensure the control spans the entire container */
 }
 
 .react-select__control:hover {

@@ -7,11 +7,11 @@ import "./StockCalculator.css";
 function StockCalculator() {
   const [stocks, setStocks] = useState([]); // To store stocks parsed from CSV
   const [stockSymbol, setStockSymbol] = useState(null); // Selected stock symbol
-  const [numShares, setNumShares] = useState(0);
-  const [initialInvestment, setInitialInvestment] = useState(0);
-  const [earnings, setEarnings] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [numShares, setNumShares] = useState(0); // Number of shares
+  const [initialInvestment, setInitialInvestment] = useState(0); // Initial investment
+  const [earnings, setEarnings] = useState(null); // Calculated earnings
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(""); // Error message
 
   const TWELVE_DATA_API_KEY = "7b8e5ad369c2468aa1dbcc62e0af2280"; // Your Twelve Data API Key
 
@@ -97,7 +97,7 @@ function StockCalculator() {
             type="number"
             placeholder="Number of Shares"
             value={numShares}
-            onChange={(e) => setNumShares(e.target.value)}
+            onChange={(e) => setNumShares(Number(e.target.value))}
             className="input-field"
           />
         </div>
@@ -109,20 +109,32 @@ function StockCalculator() {
             type="number"
             placeholder="Initial Investment"
             value={initialInvestment}
-            onChange={(e) => setInitialInvestment(e.target.value)}
+            onChange={(e) => setInitialInvestment(Number(e.target.value))}
             className="input-field"
           />
         </div>
 
-        <button onClick={calculateEarnings} disabled={loading}>
-          Calculate Earnings
-        </button>
+        <div className="button-container">
+          <button onClick={calculateEarnings} disabled={loading}>
+            Calculate Earnings
+          </button>
+        </div>
       </div>
 
       {error && <p className="error-message">{error}</p>}
 
       {earnings !== null && !loading && (
-        <p className="result">Your potential earnings: ${earnings.toFixed(2)}</p>
+        <p className="result">
+          Your potential earnings:{" "}
+          <span
+            style={{
+              color: earnings >= 0 ? "green" : "red",
+              fontWeight: "bold",
+            }}
+          >
+            ${earnings.toFixed(2)}
+          </span>
+        </p>
       )}
       {loading && <p className="loading">Loading...</p>}
     </div>
