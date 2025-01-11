@@ -119,3 +119,20 @@ button:disabled {
 .react-select__menu {
   border-radius: 5px;
 }
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.react-select {
+  width: 100%;
+  margin-bottom: 15px;
+}

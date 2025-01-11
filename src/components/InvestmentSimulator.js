@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Papa from "papaparse"; // For parsing CSV
 import Select from "react-select"; // For searchable dropdown
 import axios from "axios";
+import { Pie } from "react-chartjs-2"; // For the pie chart
 import "./InvestmentSimulator.css";
 
 function InvestmentSimulator() {
@@ -85,12 +86,48 @@ function InvestmentSimulator() {
     setPortfolio(portfolio.filter((stock) => stock.symbol !== symbol));
   };
 
+  // Prepare data for the pie chart
+  const pieChartData = () => {
+    const totalValue = portfolio.reduce(
+      (sum, stock) => sum + stock.shares * stock.price,
+      0
+    );
+
+    const labels = portfolio.map((stock) => stock.symbol);
+    const data = portfolio.map(
+      (stock) => ((stock.shares * stock.price) / totalValue) * 100
+    );
+
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          backgroundColor: [
+            "#FF6384",
+            "#36A2EB",
+            "#FFCE56",
+            "#4BC0C0",
+            "#9966FF",
+          ],
+          hoverBackgroundColor: [
+            "#FF6384",
+            "#36A2EB",
+            "#FFCE56",
+            "#4BC0C0",
+            "#9966FF",
+          ],
+        },
+      ],
+    };
+  };
+
   return (
     <div className="investment-simulator">
       <h3>Investment Simulator</h3>
       <p>Balance: ${balance.toFixed(2)}</p>
 
-      <div>
+      <div className="input-container">
         {/* Searchable Dropdown for Stock Selection */}
         <label>Select Stock Symbol:</label>
         <Select
@@ -110,9 +147,11 @@ function InvestmentSimulator() {
           placeholder="Enter number of shares"
         />
 
-        <button onClick={buyStock} disabled={loading}>
-          Buy Stock
-        </button>
+        <div className="button-container">
+          <button onClick={buyStock} disabled={loading}>
+            Buy Stock
+          </button>
+        </div>
       </div>
 
       {errorMessage && <p className="error-message">{errorMessage}</p>}
@@ -125,13 +164,24 @@ function InvestmentSimulator() {
           <ul>
             {portfolio.map((stock, index) => (
               <li key={index}>
-                {stock.symbol} - {stock.shares} shares @ ${stock.price.toFixed(2)} each
+                {stock.symbol} - {stock.shares} shares @ ${stock.price.toFixed(
+                  2
+                )}{" "}
+                each
                 <button onClick={() => sellStock(stock.symbol)}>Sell</button>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {/* Render the Pie Chart */}
+      {portfolio.length > 0 && (
+        <div className="chart-container">
+          <h4>Portfolio Allocation</h4>
+          <Pie data={pieChartData()} />
+        </div>
+      )}
     </div>
   );
 }
