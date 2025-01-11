@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import './StockComparison.css';
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 function StockComparison() {
   const [stockSymbols, setStockSymbols] = useState([]);
   const [comparisonData, setComparisonData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');  
+  const [errorMessage, setErrorMessage] = useState("");
 
   const stocks = [
     { symbol: 'AAPL', name: 'Apple' },
@@ -16,79 +21,86 @@ function StockComparison() {
     { symbol: 'TSM', name: 'TSMC' },
     { symbol: 'INTC', name: 'Intel' },
     { symbol: 'AMD', name: 'AMD' },
-    { symbol: 'CSCO', name: 'Cisco' },
-    { symbol: 'ORCL', name: 'Oracle' },
     { symbol: 'META', name: 'Meta' },
     { symbol: 'PFE', name: 'Pfizer' },
     { symbol: 'JNJ', name: 'Johnson & Johnson' },
-    { symbol: 'MRK', name: 'Merck' },
-    { symbol: 'ABBV', name: 'AbbVie' },
-    { symbol: 'BMY', name: 'Bristol Myers Squibb' },
-    { symbol: 'GSK', name: 'GlaxoSmithKline' },
-    { symbol: 'LLY', name: 'Eli Lilly' },
-    { symbol: 'CVS', name: 'CVS Health' },
-    { symbol: 'AMGN', name: 'Amgen' },
-    { symbol: 'MDT', name: 'Medtronic' },
-    { symbol: 'JPM', name: 'JPMorgan Chase' },
-    { symbol: 'BAC', name: 'Bank of America' },
-    { symbol: 'WFC', name: 'Wells Fargo' },
-    { symbol: 'C', name: 'Citigroup' },
-    { symbol: 'GS', name: 'Goldman Sachs' },
-    { symbol: 'MS', name: 'Morgan Stanley' },
-    { symbol: 'USB', name: 'U.S. Bancorp' },
-    { symbol: 'AXP', name: 'American Express' },
-    { symbol: 'V', name: 'Visa' },
-    { symbol: 'MA', name: 'Mastercard' },
-    { symbol: 'XOM', name: 'ExxonMobil' },
-    { symbol: 'TOT', name: 'TotalEnergies' },
-    { symbol: 'CVX', name: 'Chevron' },
-    { symbol: 'BP', name: 'BP' },
-    { symbol: 'SLB', name: 'Schlumberger' },
-    { symbol: 'ENB', name: 'Enbridge' },
-    { symbol: 'PXD', name: 'Pioneer Natural Resources' },
-    { symbol: 'COP', name: 'ConocoPhillips' },
-    { symbol: 'OXY', name: 'Occidental Petroleum' },
-    { symbol: 'KO', name: 'Coca-Cola' },
-    { symbol: 'PEP', name: 'PepsiCo' },
-    { symbol: 'PG', name: 'Procter & Gamble' },
-    { symbol: 'TGT', name: 'Target' },
-    { symbol: 'WMT', name: 'Walmart' },
-    { symbol: 'COST', name: 'Costco' },
-    { symbol: 'MCD', name: 'McDonald’s' },
-    { symbol: 'DIS', name: 'Disney' },
-    { symbol: 'SBUX', name: 'Starbucks' },
-    { symbol: 'CL', name: 'Colgate-Palmolive' }
   ];
 
   const fetchStockData = async () => {
     if (stockSymbols.some(symbol => symbol.trim() === '')) {
-      setErrorMessage('Please enter all stock symbols before comparing.');
+      setErrorMessage("Please select all stock symbols before comparing.");
       return;
     }
 
     setLoading(true);
-    setErrorMessage(''); 
+    setErrorMessage("");
 
     try {
-      const promises = stockSymbols.map(symbol => 
+      const promises = stockSymbols.map((symbol) =>
         axios.get(`https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=7b8e5ad369c2468aa1dbcc62e0af2280`)
       );
       const results = await Promise.all(promises);
-      setComparisonData(results.map(res => res.data));
+      const data = results.map((res, index) => ({
+        symbol: stockSymbols[index],
+        name: stocks.find((s) => s.symbol === stockSymbols[index])?.name || stockSymbols[index],
+        values: res.data.values.reverse(), // Reverse for chronological order
+      }));
+      setComparisonData(data);
     } catch (error) {
       console.error("Error fetching stock data", error);
+      setErrorMessage("Failed to fetch stock data.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleAddStock = () => {
-    setStockSymbols([...stockSymbols, '']);
+    setStockSymbols([...stockSymbols, ""]);
   };
 
   const handleSymbolChange = (index, value) => {
     const newSymbols = [...stockSymbols];
     newSymbols[index] = value;
     setStockSymbols(newSymbols);
+  };
+
+  // Prepare data for the chart
+  const chartData = {
+    labels: comparisonData[0]?.values.map((val) => val.datetime) || [], // Dates
+    datasets: comparisonData.map((stock, index) => ({
+      label: stock.name,
+      data: stock.values.map((val) => parseFloat(val.close)), // Close prices
+      borderColor: `rgba(${(index * 50) % 255}, ${(index * 100) % 255}, ${(index * 150) % 255}, 0.6)`,
+      backgroundColor: `rgba(${(index * 50) % 255}, ${(index * 100) % 255}, ${(index * 150) % 255}, 0.2)`,
+      borderWidth: 2,
+    })),
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Stock Comparison - Close Prices Over Time",
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "Date",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Close Price",
+        },
+      },
+    },
   };
 
   return (
@@ -119,28 +131,9 @@ function StockComparison() {
       {errorMessage && <p className="error-message">{errorMessage}</p>}
 
       {comparisonData.length > 0 && (
-        <table className="comparison-table">
-          <thead>
-            <tr>
-              <th>Stock Symbol</th>
-              <th>Close Price</th>
-              <th>Open Price</th>
-              <th>High</th>
-              <th>Low</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparisonData.map((stock, index) => (
-              <tr key={index}>
-                <td>{stock.symbol}</td>
-                <td>{stock.values[0].close}</td>
-                <td>{stock.values[0].open}</td>
-                <td>{stock.values[0].high}</td>
-                <td>{stock.values[0].low}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="chart-container">
+          <Line data={chartData} options={chartOptions} />
+        </div>
       )}
     </div>
   );
