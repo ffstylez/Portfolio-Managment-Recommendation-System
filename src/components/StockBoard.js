@@ -28,6 +28,11 @@ function StockBoard() {
   const [tickers, setTickers] = useState([]);
   const [weights, setWeights] = useState([]);
   const navigate = useNavigate(); // React Router hook for navigation
+  const handleRowClick = (symbol) => {
+    navigate(`/stock-details/${symbol}`); // Ensure the route matches App.js
+  };
+  
+  
 
   const FINNHUB_API_KEY1 = "ctjbr29r01quipmtn8mgctjbr29r01quipmtn8n0"; // Replace with your Finnhub API Key
   const FINNHUB_API_KEY2 = "cttf39pr01qqhvb0f4r0cttf39pr01qqhvb0f4rg"; // Replace with your Finnhub API Key
@@ -38,6 +43,7 @@ function StockBoard() {
   const handleCloseModal = () => {
     setShowModal(false);
   };
+  
 
   const handleUserPreferencesClick = async () => {
     try {
@@ -100,7 +106,15 @@ function StockBoard() {
       setShowModal(false);
     }
   };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("Refreshing page...");
+      window.location.reload(); // Refresh the entire page every minute
+    }, 60000); // 60000ms = 1 minute
 
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []);
+  
   useEffect(() => {
     const fetchTickersInPortfolio = async () => {
       try {
@@ -407,19 +421,27 @@ function StockBoard() {
               </tr>
             </thead>
             <tbody>
-              {sortedData.map((stock, index) => (
-                <tr key={index}>
-                  <td>{stock.companyName}</td>
-                  <td>{stock.marketCap?.toFixed(2) || "N/A"}</td>
-                  <td>{priceBuy[stock.symbol]?.toFixed(2) || "N/A"}</td>
-                  <td>{stock.price?.toFixed(2) || "N/A"}</td>
-                  <td>{stock.changePercent?.toFixed(2) || "N/A"}</td>
-                  <td>{stock.weightInPortfolio}</td>
-                  <td>{stock.weightedChangeUSD}</td>
-                  <td>{stock.numberOfStocks}</td>
-                </tr>
-              ))}
-            </tbody>
+  {sortedData.map((stock, index) => (
+    <tr key={index}>
+      <td>
+        <button
+          className="stock-button"
+          onClick={() => handleRowClick(stock.symbol)}
+        >
+          {stock.companyName}
+        </button>
+      </td>
+      <td>{stock.marketCap?.toFixed(2) || "N/A"}</td>
+      <td>{priceBuy[stock.symbol]?.toFixed(2) || "N/A"}</td>
+      <td>{stock.price?.toFixed(2) || "N/A"}</td>
+      <td>{stock.changePercent?.toFixed(2) || "N/A"}</td>
+      <td>{stock.weightInPortfolio}</td>
+      <td>{stock.weightedChangeUSD}</td>
+      <td>{stock.numberOfStocks}</td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         </main>
       </div>
