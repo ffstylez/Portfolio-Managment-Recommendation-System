@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 import json
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 
 latest_predictions = pd.read_csv('latest_predictions.csv')
@@ -10,20 +12,61 @@ latest_predictions = pd.read_csv('latest_predictions.csv')
 cleaned_cov_matrix_np = np.load('cleaned_cov_matrix_np.npy')
 
 
-def optimize_portfolio_rolling(portfolio_size, lambda_val, latest_predictions, cov_matrix, investment_horizon, tolerance=1e-10):
+def optimize_single_asset(new_asset, selected_assets, tickers_dict, latest_predictions, cov_matrix, lambda_val, investment_horizon, portfolio_size, tolerance=1e-10):
     """
-    Optimizes a portfolio using a rolling approach with dynamic bounds.
+    Optimize portfolio for a single new asset addition.
+    """
+    current_portfolio = selected_assets + [new_asset]
+    selected_asset_indices = [tickers_dict[asset] for asset in current_portfolio]
+    
+    # Get predictions
+    pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
+    if 'ticker' in latest_predictions:
+        selected_mu = latest_predictions.loc[
+            latest_predictions['ticker'].isin(current_portfolio),
+            pred_col
+        ].values
+    else:
+        selected_mu = latest_predictions.loc[current_portfolio, pred_col].values
 
-    Args:
-        portfolio_size: The desired number of assets in the final portfolio.
-        lambda_val: The risk aversion parameter (lambda).
-        latest_predictions: DataFrame with 'ticker' and 'prediction' columns.
-        cov_matrix: NumPy array representing the covariance matrix.
-        investment_horizon: Investment horizon in months.
-        tolerance: Tolerance for numerical optimization.
+    selected_cov_matrix = cov_matrix[np.ix_(selected_asset_indices, selected_asset_indices)]
+    
+    def objective_function(weights):
+        portfolio_return = np.dot(weights, selected_mu)
+        portfolio_variance = np.dot(weights.T, np.dot(selected_cov_matrix, weights))
+        return -(portfolio_return - (lambda_val / 2) * portfolio_variance)
+    
+    def get_dynamic_bounds(current_size, target_size):
+        if current_size == 1:
+            return [(1.0, 1.0)]
+        elif current_size == target_size:
+            return [(0.02, 0.15)] * current_size
+        else:
+            return [(0.0, 1.0)] * current_size
+            
+    constraints = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+    bounds = get_dynamic_bounds(len(current_portfolio), portfolio_size)
+    initial_weights = np.array([1/len(current_portfolio)] * len(current_portfolio))
+    
+    result = minimize(
+        objective_function,
+        initial_weights,
+        method='SLSQP',
+        bounds=bounds,
+        constraints=constraints,
+        options={'ftol': 1e-8}
+    )
+    
+    return {
+        'asset': new_asset,
+        'objective_value': result.fun if result.success else float('inf'),
+        'weights': result.x if result.success else None,
+        'success': result.success
+    }
 
-    Returns:
-        Dictionary containing optimization results or None if there are issues.
+def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predictions, cov_matrix, investment_horizon, n_processes=None, tolerance=1e-10):
+    """
+    Parallelized version of portfolio optimization using multiprocessing.
     """
     if lambda_val <= 0:
         raise ValueError("lambda_val must be positive")
@@ -43,85 +86,53 @@ def optimize_portfolio_rolling(portfolio_size, lambda_val, latest_predictions, c
     all_selected_assets = []
     all_weights = []
     all_objective_values = []
-
-    def get_dynamic_bounds(current_size, target_size):
-        """
-        Returns appropriate bounds based on the current portfolio size.
-        """
-        if current_size == 1:
-            return [(1.0, 1.0)]  # First asset must be 100%
-        elif current_size == target_size:
-            return [(0.02, 0.15)] * current_size  # Final target bounds
-        else:
-            # Intermediate bounds - allow more flexibility
-            return [(0.0, 1.0)] * current_size
-
-    for k in range(portfolio_size):
-        best_objective_value = float('inf')
-        best_weights = None
-        best_new_asset = None
-
-        remaining_assets = list(set(tickers) - set(selected_assets))
-
-        for new_asset in remaining_assets:
-            current_portfolio = selected_assets + [new_asset]
-            selected_asset_indices = [tickers_dict[asset] for asset in current_portfolio]
-
-            # Get predictions
-            pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
-            if 'ticker' in latest_predictions:
-                selected_mu = latest_predictions.loc[
-                    latest_predictions['ticker'].isin(current_portfolio),
-                    pred_col
-                ].values
-            else:
-                selected_mu = latest_predictions.loc[current_portfolio, pred_col].values
-
-            selected_cov_matrix = cov_matrix[np.ix_(selected_asset_indices, selected_asset_indices)]
-
-            def objective_function(weights):
-                portfolio_return = np.dot(weights, selected_mu)
-                portfolio_variance = np.dot(weights.T, np.dot(selected_cov_matrix, weights))
-                return -(portfolio_return - (lambda_val / 2) * portfolio_variance)
-
-            constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-            bounds = get_dynamic_bounds(k + 1, portfolio_size)
-            initial_weights = np.array([1/(k+1)] * (k+1))
-
-            result = minimize(
-                objective_function,
-                initial_weights,
-                method='SLSQP',
-                bounds=bounds,
-                constraints=constraints,
-                options={'ftol': 1e-8}
+    
+    # Determine number of processes
+    if n_processes is None:
+        n_processes = max(1, cpu_count() - 1)  # Leave one CPU free for system tasks
+    
+    # Create a pool of workers
+    with Pool(processes=n_processes) as pool:
+        for k in range(portfolio_size):
+            remaining_assets = list(set(tickers) - set(selected_assets))
+            
+            # Prepare the partial function with fixed arguments
+            optimize_func = partial(
+                optimize_single_asset,
+                selected_assets=selected_assets,
+                tickers_dict=tickers_dict,
+                latest_predictions=latest_predictions,
+                cov_matrix=cov_matrix,
+                lambda_val=lambda_val,
+                investment_horizon=investment_horizon,
+                portfolio_size=portfolio_size,
+                tolerance=tolerance
             )
-
-            if result.success and result.fun < best_objective_value:
-                best_objective_value = result.fun
-                best_weights = result.x.copy()
-                best_new_asset = new_asset
-                best_result = result
-
-        if best_new_asset is None:
-            break
-
-        selected_assets.append(best_new_asset)
-        all_selected_assets.append(selected_assets.copy())
-
-        best_weights[np.abs(best_weights) < tolerance] = 0
-        all_weights.append(best_weights)
-        all_objective_values.append(best_objective_value)
+            
+            # Run optimizations in parallel
+            results = pool.map(optimize_func, remaining_assets)
+            
+            # Find the best result
+            best_result = min(results, key=lambda x: x['objective_value'])
+            
+            if best_result['success']:
+                selected_assets.append(best_result['asset'])
+                all_selected_assets.append(selected_assets.copy())
+                all_weights.append(best_result['weights'])
+                all_objective_values.append(best_result['objective_value'])
+            else:
+                break
 
     if not selected_assets:
         return None
 
     # Final optimization with target bounds
     final_indices = [tickers_dict[asset] for asset in selected_assets]
+    pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
     final_mu = latest_predictions.loc[
                latest_predictions['ticker' if 'ticker' in latest_predictions else 'index'].isin(selected_assets),
-               pred_col].values
-
+                pred_col].values
+    
     final_cov = cov_matrix[np.ix_(final_indices, final_indices)]
 
 
@@ -140,7 +151,7 @@ def optimize_portfolio_rolling(portfolio_size, lambda_val, latest_predictions, c
     return {
         'selected_assets': selected_assets,
         'weights': weights,
-        'optimal_value': final_result.fun if final_result.success else best_objective_value,
+        'optimal_value': final_result.fun if final_result.success else all_objective_values[-1],
         'all_selected_assets': all_selected_assets,
         'all_weights': all_weights,
         'all_objective_values': all_objective_values,
@@ -167,13 +178,15 @@ if __name__ == "__main__":
         parser.add_argument("portfolio_size", type=int, help="Desired number of assets in the portfolio.")
         args = parser.parse_args()
         # Run the optimization function
-        result = optimize_portfolio_rolling(
+        result = optimize_portfolio_rolling_parallel(
             portfolio_size=args.portfolio_size,
             lambda_val=args.lambda_val,
             latest_predictions=latest_predictions,
             cov_matrix=cleaned_cov_matrix_np,
-            investment_horizon=args.investment_horizon
-        )
+            investment_horizon=args.investment_horizon,
+            n_processes=4)
+
+
         keys_to_remove = ['optimal_value', 'all_selected_assets', 'all_objective_values', 'success', 'message', 'all_weights']
         for key in keys_to_remove:
             result.pop(key, None)  # Use pop to safely remove the key if it exists
