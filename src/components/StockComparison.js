@@ -77,6 +77,12 @@ function StockComparison() {
     setLoading(false);
   };
 
+  const handleRemoveStock = (index) => {
+    const newStockSymbols = [...stockSymbols];
+    newStockSymbols.splice(index, 1); // Remove the stock at the specified index
+    setStockSymbols(newStockSymbols);
+  };
+
   return (
     <div className="stock-comparison">
       <h3>Stock Comparison Tool</h3>
@@ -96,6 +102,12 @@ function StockComparison() {
             isClearable
             className="react-select"
           />
+          <button
+            onClick={() => handleRemoveStock(index)}
+            className="remove-button"
+          >
+            Remove
+          </button>
         </div>
       ))}
 

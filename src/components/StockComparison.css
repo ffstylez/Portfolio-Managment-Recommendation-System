@@ -134,3 +134,19 @@
 .react-select__menu {
   border-radius: 5px;
 }
+.remove-button {
+  margin-left: 5px;
+  padding: 2px 6px;
+  width: 100px; /* Set a fixed width */
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.remove-button:hover {
+  background-color: #cc0000;
+}
