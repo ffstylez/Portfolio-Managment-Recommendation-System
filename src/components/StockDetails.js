@@ -49,19 +49,32 @@ function StockDetails() {
         return date.toISOString().split('T')[0];
       };
 
-      const days = {
-        '5': 5,
-        '30': 30,
-        '365': 365,
-      }[timeframe] || 30;
+      const daysMapping = {
+        '7': 7,      // 1 Week
+        '30': 30,    // 1 Month
+        '90': 90,    // 3 Months
+        '180': 180,  // 6 Months
+        '365': 365,  // 1 Year
+        '730': 730,  // 2 Years
+        '1825': 1825, // 5 Years
+
+      };
+      
+
+      const days = daysMapping[timeframe];
+
+      const params = {
+        symbol: ticker,
+        interval: '1day',
+        apikey: TWELVE_DATA_API_KEY,
+      };
+
+      if (days !== null) {
+        params.start_date = daysAgo(days);
+      }
 
       const response = await axios.get(`https://api.twelvedata.com/time_series`, {
-        params: {
-          symbol: ticker,
-          interval: '1day',
-          start_date: daysAgo(days),
-          apikey: TWELVE_DATA_API_KEY,
-        },
+        params,
       });
 
       const { values } = response.data;
@@ -77,7 +90,7 @@ function StockDetails() {
         labels,
         datasets: [
           {
-            label: `${ticker} Stock Price (Last ${days} Days)`,
+            label: `${ticker} Stock Price`,
             data,
             borderColor: 'rgba(75, 192, 192, 1)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -117,9 +130,13 @@ function StockDetails() {
             onChange={handleTimeframeChange}
             className="timeframe-dropdown"
           >
-            <option value="5">5 Days</option>
+            <option value="7">1 Week</option>
             <option value="30">1 Month</option>
+            <option value="90">3 Months</option>
+            <option value="180">6 Months</option>
             <option value="365">1 Year</option>
+            <option value="730">2 Years</option>
+            <option value="1825">5 Years</option>
           </select>
         </div>
 
