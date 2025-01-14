@@ -80,6 +80,7 @@ const Home = () => {
         const data = await response.json();
         handleCloseModal();
         localStorage.setItem("token", data.token);
+        localStorage.setItem("email", email); 
         navigate("/stockboard");
       } else {
         const errorText = await response.text();
@@ -133,6 +134,7 @@ const Home = () => {
         setConfirmPassword("");
         navigate("/user-preferences", { state: { email } });
         localStorage.setItem("token", data.token);
+        localStorage.setItem("email", email); 
         handleCloseModal();
       }
     } catch (error) {
