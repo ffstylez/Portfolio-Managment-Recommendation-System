@@ -12,7 +12,58 @@ import logo from "../assets/logo.png";
 import logout from "../assets/logout.png";
 import calculater from "../assets/calculater.png";
 
-function StockBoard() {
+function StockBoard({ userEmail }) {
+  const [email, setEmail] = useState(userEmail || "");
+
+useEffect(() => {
+  if (!email) {
+    const storedEmail = localStorage.getItem("email");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }
+}, [email]);
+
+useEffect(() => {
+  const fetchInitialInvestment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:3001/user-preferences", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data && response.data["Initial Investment"]) {
+        const initialInvestment = parseFloat(response.data["Initial Investment"]); // Save to variable
+        console.log("Initial Investment:", initialInvestment);
+
+        // Perform your calculations here if needed:
+        calculateUnitsOwned(initialInvestment);
+      } else {
+        console.error("Initial Investment not found.");
+      }
+    } catch (error) {
+      console.error("Error fetching initial investment:", error.message);
+    }
+  };
+
+  fetchInitialInvestment();
+}, []);
+
+const calculateUnitsOwned = (initialInvestment) => {
+  const updatedData = data.map((stock) => {
+    const weight = parseFloat(stock.weightInPortfolio) ; 
+    const currentPrice = parseFloat(stock.price);
+    const unitsOwned = (initialInvestment * weight) / currentPrice;
+
+    return {
+      ...stock,
+      unitsOwned: isNaN(unitsOwned) ? "N/A" : unitsOwned.toFixed(2),
+    };
+  });
+
+  setData(updatedData);
+};
+
   const [data, setData] = useState(() => {
     const savedData = localStorage.getItem("stockData");
     return savedData ? JSON.parse(savedData) : [];
@@ -184,7 +235,7 @@ function StockBoard() {
               weightInPortfolio: weights[i],
               marketCap: profileResponse.data.marketCapitalization || "N/A",
               weightedChangeUSD: "N/A",
-              numberOfStocks: 0,
+              unitsowned: 0,
             });
           } catch (error) {
             console.error(
@@ -310,7 +361,13 @@ function StockBoard() {
             />
           </button>
           <div className="user-info">
-            <span className="user-name">User User</span>
+          
+          <div className="right-section">
+          <p className="user-email">Logged in as: {email}</p>
+
+
+          </div>
+
           </div>
         </div>
       </header>
@@ -412,10 +469,10 @@ function StockBoard() {
                     {getSortIndicator("weightedChangeUSD")}
                   </span>
                 </th>
-                <th data-sortable onClick={() => handleSort("numberOfStocks")}>
-                  Number of Stocks{" "}
+                <th data-sortable onClick={() => handleSort("unitsowned")}>
+                  Units Owned{" "}
                   <span className="sort-indicator">
-                    {getSortIndicator("numberOfStocks")}
+                    {getSortIndicator("unitsowned")}
                   </span>
                 </th>
               </tr>
@@ -437,7 +494,7 @@ function StockBoard() {
       <td>{stock.changePercent?.toFixed(2) || "N/A"}</td>
       <td>{stock.weightInPortfolio}</td>
       <td>{stock.weightedChangeUSD}</td>
-      <td>{stock.numberOfStocks}</td>
+      <td>{stock.unitsOwned|| "N/A"}</td>
     </tr>
   ))}
 </tbody>

@@ -30,6 +30,8 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
+  display: block;
+  margin-top: 10px;
 }
 
 .left-section {
@@ -235,11 +237,6 @@ body {
     padding: 10px;
   }
 
-  .right-section {
-    display: block;
-    margin-top: 10px;
-  }
-
   .user-info {
     margin-top: 10px;
   }
@@ -263,10 +260,6 @@ body {
 
   .site-logo {
     width: 120px;
-  }
-
-  .right-section {
-    margin-top: 10px;
   }
 
   .alert-button {

@@ -362,6 +362,47 @@ app.get("/get-portfolio", authenticateToken, (req, res) => {
     return res.status(500).json({ message: "Failed to retrieve portfolio" });
   }
 });
+app.get("/user-preferences", authenticateToken, (req, res) => {
+  const userEmail = req.user.email; // Get the email from the authenticated user
+
+  try {
+    // Check if the preferences file exists
+    if (!fs.existsSync(preferencesFile)) {
+      return res.status(404).json({ message: "Preferences file not found" });
+    }
+
+    // Read and parse the preferences file
+    const preferencesData = fs
+      .readFileSync(preferencesFile, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => line.split(","));
+
+    // Extract the header and rows
+    const [header, ...rows] = preferencesData;
+
+    // Find the user's row based on the email
+    const userRow = rows.find((row) => row[0].trim() === userEmail);
+
+    if (!userRow) {
+      return res
+        .status(404)
+        .json({ message: "User preferences not found for this email" });
+    }
+
+    // Map the row to the header to form a JSON object
+    const userPreferences = {};
+    header.forEach((key, index) => {
+      userPreferences[key.trim()] = userRow[index]?.trim() || "";
+    });
+
+    return res.status(200).json(userPreferences);
+  } catch (error) {
+    console.error("Error retrieving user preferences:", error.message);
+    return res.status(500).json({ message: "Failed to retrieve user preferences" });
+  }
+});
+
 
 // Start the server
 app.listen(PORT, () => {
