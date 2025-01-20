@@ -141,27 +141,27 @@ def custom_fill(df):
         df[col] = df[col].fillna(method='ffill')
     return df
 
-def compute_cov(prices_df: pd.DataFrame, interval: str = '2M'):
+def compute_cov(prices_df: pd.DataFrame, interval: str = '2M') -> pd.DataFrame:
     """
     Compute the covariance matrix of asset returns.
     
     Parameters:
-    prices_df (pd.DataFrame): DataFrame containing price data with dates as index
-    interval (str): Resampling interval (e.g., '2M' for 2 months, 'W' for weekly)
-                   Uses pandas offset aliases: 
-                   - 'W' for weekly
-                   - 'M' for monthly
-                   - '3M' for quarterly
-                   - '2W' for bi-weekly
-                   etc.
+    prices_df (pd.DataFrame): DataFrame containing price data with dates as index.
+    interval (str): Resampling interval (e.g., '2M' for 2 months, 'W' for weekly).
+                    Uses pandas offset aliases: 
+                    - 'W' for weekly
+                    - 'M' for monthly
+                    - '3M' for quarterly
+                    - '2W' for bi-weekly
+                    etc.
     
     Returns:
-    pd.DataFrame: Covariance matrix of returns
+    pd.DataFrame: Covariance matrix of returns.
     """
-    # Resample according to the specified interval
+    # Resample according to the specified interval (take the last price in each period)
     resampled_prices = prices_df.resample(interval).last()
     
-    # Drop tickers with insufficient data
+    # Drop tickers (columns) with insufficient data
     valid_tickers = resampled_prices.columns[resampled_prices.count() > 1]
     resampled_prices = resampled_prices[valid_tickers]
     
@@ -196,11 +196,27 @@ if __name__ == "__main__":
     
     prices_df = custom_fill(prices_df)
     
-    # Example of using the modified covariance function with different intervals
-    monthly_cov = compute_cov(prices_df, '1M')  # Monthly
-    quarterly_cov = compute_cov(prices_df, '3M')  # Quarterly
-    biweekly_cov = compute_cov(prices_df, '2W')  # Bi-weekly
-    
-    # Save to CSV
-    monthly_cov.reset_index(inplace=True)
-    monthly_cov.to_csv('monthly_cov.csv', index=False)
+    # Example of using the modified covariance function with different intervals  # Monthly
+    two_month_cov = compute_cov(prices_df, '2M')  
+    three_month_cov = compute_cov(prices_df, '3M')  
+    four_month_cov = compute_cov(prices_df, '4M')  
+    five_month_cov = compute_cov(prices_df, '5M')  
+    six_month_cov = compute_cov(prices_df, '6M')  
+    eight_month_cov = compute_cov(prices_df, '8M')  
+    twelve_month_cov = compute_cov(prices_df, '12M')  
+
+    two_month_cov.reset_index(inplace=True)
+    three_month_cov.reset_index(inplace=True)
+    four_month_cov.reset_index(inplace=True)
+    five_month_cov.reset_index(inplace=True)
+    six_month_cov.reset_index(inplace=True)
+    eight_month_cov.reset_index(inplace=True)
+    twelve_month_cov.reset_index(inplace=True)
+
+    np.save('cov_2month.npy', two_month_cov.to_numpy())
+    np.save('cov_3month.npy', three_month_cov.to_numpy())
+    np.save('cov_4month.npy', four_month_cov.to_numpy())
+    np.save('cov_5month.npy', five_month_cov.to_numpy())
+    np.save('cov_6month.npy', six_month_cov.to_numpy())
+    np.save('cov_8month.npy', eight_month_cov.to_numpy())
+    np.save('cov_12month.npy', twelve_month_cov.to_numpy())

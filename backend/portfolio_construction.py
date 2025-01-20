@@ -6,12 +6,6 @@ import json
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
-
-latest_predictions = pd.read_csv('latest_predictions.csv')
-
-cleaned_cov_matrix_np = np.load('cleaned_cov_matrix_np.npy')
-
-
 def optimize_single_asset(new_asset, selected_assets, tickers_dict, latest_predictions, cov_matrix, lambda_val, investment_horizon, portfolio_size, tolerance=1e-10):
     """
     Optimize portfolio for a single new asset addition.
@@ -20,7 +14,7 @@ def optimize_single_asset(new_asset, selected_assets, tickers_dict, latest_predi
     selected_asset_indices = [tickers_dict[asset] for asset in current_portfolio]
     
     # Get predictions
-    pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
+    pred_col = 'prediction'
     if 'ticker' in latest_predictions:
         selected_mu = latest_predictions.loc[
             latest_predictions['ticker'].isin(current_portfolio),
@@ -57,10 +51,13 @@ def optimize_single_asset(new_asset, selected_assets, tickers_dict, latest_predi
         options={'ftol': 1e-8}
     )
     
+    # Format weights to 3 decimal places if optimization was successful
+    formatted_weights = np.round(result.x, 3) if result.success else None
+    
     return {
         'asset': new_asset,
         'objective_value': result.fun if result.success else float('inf'),
-        'weights': result.x if result.success else None,
+        'weights': formatted_weights,
         'success': result.success
     }
 
@@ -89,14 +86,13 @@ def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predi
     
     # Determine number of processes
     if n_processes is None:
-        n_processes = max(1, cpu_count() - 1)  # Leave one CPU free for system tasks
+        n_processes = max(1, cpu_count() - 1)
     
     # Create a pool of workers
     with Pool(processes=n_processes) as pool:
         for k in range(portfolio_size):
             remaining_assets = list(set(tickers) - set(selected_assets))
             
-            # Prepare the partial function with fixed arguments
             optimize_func = partial(
                 optimize_single_asset,
                 selected_assets=selected_assets,
@@ -109,10 +105,7 @@ def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predi
                 tolerance=tolerance
             )
             
-            # Run optimizations in parallel
             results = pool.map(optimize_func, remaining_assets)
-            
-            # Find the best result
             best_result = min(results, key=lambda x: x['objective_value'])
             
             if best_result['success']:
@@ -128,13 +121,12 @@ def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predi
 
     # Final optimization with target bounds
     final_indices = [tickers_dict[asset] for asset in selected_assets]
-    pred_col = f'return_{investment_horizon}m_pred' if 'ticker' in latest_predictions else 'prediction'
+    pred_col = 'prediction' 
     final_mu = latest_predictions.loc[
                latest_predictions['ticker' if 'ticker' in latest_predictions else 'index'].isin(selected_assets),
                 pred_col].values
     
     final_cov = cov_matrix[np.ix_(final_indices, final_indices)]
-
 
     final_result = minimize(
         lambda w: -(np.dot(w, final_mu) - (lambda_val / 2) * np.dot(w.T, np.dot(final_cov, w))),
@@ -145,8 +137,8 @@ def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predi
         options={'ftol': 1e-8}
     )
 
-    weights = final_result.x if final_result.success else all_weights[-1]
-    weights = weights.tolist()
+    # Format weights to 3 decimal places
+    weights = np.round(final_result.x if final_result.success else all_weights[-1], 3).tolist()
 
     return {
         'selected_assets': selected_assets,
@@ -161,11 +153,13 @@ def optimize_portfolio_rolling_parallel(portfolio_size, lambda_val, latest_predi
 
 def convert_to_serializable(obj):
     if isinstance(obj, np.ndarray):
-        return obj.tolist()
+        return np.round(obj, 3).tolist()  # Round numpy arrays to 3 decimal places
     elif isinstance(obj, list):
         return [convert_to_serializable(item) for item in obj]
     elif isinstance(obj, dict):
         return {key: convert_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, float):
+        return round(obj, 3)  # Round individual float values to 3 decimal places
     else:
         return obj
 
@@ -178,6 +172,11 @@ if __name__ == "__main__":
         parser.add_argument("portfolio_size", type=int, help="Desired number of assets in the portfolio.")
         args = parser.parse_args()
         # Run the optimization function
+
+        latest_predictions = pd.read_csv(f'latest_predictions/predictions_{args.investment_horizon}months.csv')
+        cleaned_cov_matrix_np = np.load(f'covariance_matricies/cov_{args.investment_horizon}month.npy')
+
+
         result = optimize_portfolio_rolling_parallel(
             portfolio_size=args.portfolio_size,
             lambda_val=args.lambda_val,

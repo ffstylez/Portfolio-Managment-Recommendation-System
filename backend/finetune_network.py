@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -109,11 +110,17 @@ def update_model(new_data_path, old_model_path, save_path):
 if __name__ == "__main__":
     # Example usage
     NEW_DATA_PATH = "path/to/new/data.csv"
-    OLD_MODEL_PATH = "path/to/old/model.ckpt"
-    SAVE_PATH = "path/to/save/updated_model.ckpt"
+    NETWORKS_FOLDER = "Networks"
     
-    updated_model, trainer = update_model(
-        new_data_path=NEW_DATA_PATH,
-        old_model_path=OLD_MODEL_PATH,
-        save_path=SAVE_PATH
-    )
+    for filename in os.listdir(NETWORKS_FOLDER):
+            if filename.endswith(".ckpt"):
+                old_model_path = os.path.join(NETWORKS_FOLDER, filename)
+
+                # Build a save_path (we'll prefix "updated_" or any custom naming)
+
+                # Call the update_model function
+                updated_model, trainer = update_model(
+                    new_data_path=NEW_DATA_PATH,
+                    old_model_path=old_model_path,
+                    save_path=NETWORKS_FOLDER
+                )
