@@ -63,13 +63,13 @@ const writeCSV = (filePath, data, includeHeader = false) => {
 function ensurePythonEnvironment() {
   try {
     // Check if Python is installed
-    const pythonVersion = execSync("python3 --version").toString().trim();
+    const pythonVersion = execSync("python --version").toString().trim();
     console.log(`Python version detected: ${pythonVersion}`);
 
     // Install required packages using pip
     console.log("Ensuring Python dependencies are installed...");
-    execSync("python3 -m pip install --upgrade pip", { stdio: "inherit" });
-    execSync("python3 -m pip install -r requirements.txt", {
+    execSync("python -m pip install --upgrade pip", { stdio: "inherit" });
+    execSync("python -m pip install -r requirements.txt", {
       stdio: "inherit",
     });
     console.log("Python environment setup complete.");
@@ -85,7 +85,7 @@ function getPortfolio(lambda, horizon, size) {
   try {
     ensurePythonEnvironment();
     // Spawn a Python process to execute the script
-    const pythonProcess = spawnSync("python3", [
+    const pythonProcess = spawnSync("python", [
       "portfolio_construction.py", // Path to your Python script
       lambda.toString(),
       horizon.toString(),
