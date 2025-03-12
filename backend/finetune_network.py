@@ -1,3 +1,18 @@
+"""
+Model Fine-tuning Module for Temporal Fusion Transformer
+
+This module provides functionality for updating pre-trained Temporal Fusion Transformer (TFT) 
+models with new financial data. It handles:
+- Loading existing model checkpoints
+- Processing new financial data
+- Setting up fine-tuning with appropriate parameters
+- Performing model updates with reduced training epochs
+- Saving updated model checkpoints
+
+The module is designed for incremental learning, allowing models to adapt to newly 
+available market data without full retraining.
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -8,9 +23,36 @@ from pytorch_forecasting import TimeSeriesDataSet, TemporalFusionTransformer
 from pytorch_forecasting.metrics import MAE
 from pytorch_forecasting.data import TorchNormalizer
 
-def update_model(new_data_path, old_model_path, save_path):    
+def update_model(new_data_path, old_model_path, save_path):
+    """
+    Updates an existing TFT model with new financial data.
+    
+    Parameters:
+    new_data_path (str): Path to CSV file containing new financial data
+    old_model_path (str): Path to the existing model checkpoint
+    save_path (str): Path where the updated model will be saved
+    
+    Returns:
+    tuple: (Updated TFT model, PyTorch Lightning trainer)
+    
+    This function handles the entire fine-tuning process:
+    1. Loads and processes new data
+    2. Creates appropriate training/validation datasets
+    3. Loads the existing model
+    4. Updates the model with reduced training epochs
+    5. Saves the updated model
+    """    
     # 1. Load and prepare new data
     def prepare_data(df):
+        """
+        Applies necessary preprocessing to new data.
+        
+        Parameters:
+        df (pd.DataFrame): Raw data to process
+        
+        Returns:
+        pd.DataFrame: Processed data ready for model training
+        """
         # Add any necessary data preprocessing steps here
         # This should match your original preprocessing
         return df
@@ -20,6 +62,17 @@ def update_model(new_data_path, old_model_path, save_path):
     
     # 2. Split the new data
     def split_group(group, val_frac=0.15, test_frac=0.15):
+        """
+        Splits time series data for a single group into train/val/test sets.
+        
+        Parameters:
+        group (pd.DataFrame): Data for a single group/ticker
+        val_frac (float): Fraction of data for validation
+        test_frac (float): Fraction of data for testing
+        
+        Returns:
+        tuple: (train_data, val_data, test_data)
+        """
         val_size = int(len(group) * val_frac)
         test_size = int(len(group) * test_frac)
         train_size = len(group) - val_size - test_size
@@ -108,6 +161,12 @@ def update_model(new_data_path, old_model_path, save_path):
     return tft, trainer
 
 if __name__ == "__main__":
+    """
+    Example execution of model fine-tuning.
+    
+    This script iterates through existing model checkpoints and updates
+    each one with new financial data.
+    """
     # Example usage
     NEW_DATA_PATH = "path/to/new/data.csv"
     NETWORKS_FOLDER = "Networks"

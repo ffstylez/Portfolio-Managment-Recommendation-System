@@ -1,3 +1,8 @@
+/**
+ * ContactUs.js
+ * This component renders the Contact Us page of the InsightPredict application.
+ * It provides contact information and navigation to other parts of the application.
+ */
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -12,60 +17,93 @@ import calculater from "../assets/calculater.png";
 
 function ContactUs() {
   const navigate = useNavigate();
+  // State for controlling the logout confirmation modal
+  const [showSureModal, setShowSureModal] = React.useState(false);
 
+  /**
+   * Handles notification bell icon click
+   * Displays a simple alert message
+   */
   const handleAlertClick = () => {
     alert("Notification button clicked!");
   };
 
+  /**
+   * Navigates to the dashboard/user profiles page
+   */
   const handleDashBoardClick = () => {
-    navigate("/stockboard");
+    navigate("/UserProfiles");
   };
+
+  /**
+   * Navigates to the interactive tools page
+   */
   const handleInteractiveToolsClick = () => {
     navigate("/InteractiveTools");
   };
+
+  /**
+   * Navigates to the contact us page
+   */
   const handleContactClick = () => {
     navigate("/contact-us");
   };
+
+  /**
+   * Navigates to the news and insights page
+   */
   const handleNewsAndInsightsClick = () => {
     navigate("/NewsAndInsights");
   };
-  const handleUserPreferencesClick = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Get token from localStorage or cookies
-      if (!token) {
-        alert("Authentication token is missing. Please log in again.");
-        return;
-      }
 
-      const response = await axios.get("http://localhost:3001/get-portfolio", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response && response.data) {
-        alert(
-          "You already have a portfolio, delete the current one to create a new one"
-        );
-        return;
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        // Portfolio not found, allow navigation
-        navigate("/user-preferences");
-      } else {
-        console.error("Error checking portfolio:", error.message);
-        alert("An error occurred while checking your portfolio.");
-      }
-    }
+  /**
+   * Closes the logout confirmation modal
+   */
+  const handleCloseSureModal = () => {
+    setShowSureModal(false);
   };
 
+  /**
+   * Handles user logout
+   * Removes all relevant items from localStorage and redirects to home page
+   */
   const handleLogoutClick = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("stockData");
-    localStorage.removeItem("priceBuy")
+    localStorage.removeItem("priceBuy");
+    localStorage.removeItem("storedFor");
     navigate("/");
   };
+
   return (
     <div>
+      {/* Logout Confirmation Modal */}
+      {showSureModal && (
+        <div className="modal-overlay">
+          <div className="modal-content-delete">
+            <span className="close-modal" onClick={handleCloseSureModal}>
+              &times;
+            </span>
+            <div className="form-container">
+              <div>
+                <h2>Are you sure?</h2>
+                <button
+                  onClick={handleLogoutClick}
+                  className="button-formal-delete-yes"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={handleCloseSureModal}
+                  className="button-formal-delete-no"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header Section */}
       <header className="header">
         <div className="left-section">
@@ -87,16 +125,12 @@ function ContactUs() {
 
       {/* Main Container */}
       <div className="container">
-        {/* Sidebar */}
+        {/* Sidebar Navigation */}
         <aside className="sidebar">
           <nav className="menu">
             <a href="#" onClick={handleDashBoardClick}>
               <img src={dashboardIcon} alt="Dashboard" className="menu-icon" />
               Dashboard
-            </a>
-            <a href="#" onClick={handleUserPreferencesClick}>
-              <img src={userIcon} alt="User Preference" className="menu-icon" />
-              User Preference
             </a>
             <a href="#" onClick={handleNewsAndInsightsClick}>
               <img
@@ -118,14 +152,14 @@ function ContactUs() {
               <img src={sendIcon} alt="Contact Us" className="menu-icon" />
               Contact Us
             </a>
-            <a href="#" onClick={handleLogoutClick}>
+            <a href="#" onClick={() => setShowSureModal(true)}>
               <img src={logout} alt="Logout" className="menu-icon" />
               Logout
             </a>
           </nav>
         </aside>
 
-        {/* Content Section */}
+        {/* Contact Information Content */}
         <main className="content">
           <h2>Contact Us</h2>
           <br />

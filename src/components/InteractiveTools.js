@@ -1,3 +1,9 @@
+/**
+ * InteractiveTools.js
+ * This component provides a container for various financial tools in the
+ * InsightPredict application, allowing users to switch between different
+ * calculators and simulators.
+ */
 import React, { useState } from "react";
 import "./InteractiveTools.css";
 import { useNavigate } from "react-router-dom";
@@ -6,30 +12,41 @@ import dashboardIcon from "../assets/dashboard.png";
 import userIcon from "../assets/user.png";
 import activityTrackerIcon from "../assets/activity-tracker.png";
 import sendIcon from "../assets/send.png";
-import logo from "../assets/logo.png"; // Import the logo image
-import logout from "../assets/logout.png"; // Import the logo image
-import StockCalculator from "./StockCalculator"; // Import the StockCalculator component
-import StockComparison from "./StockComparison"; // Import the StockComparison component
-import InvestmentSimulator from "./InvestmentSimulator"; // Import the InvestmentSimulator component
+import logo from "../assets/logo.png"; 
+import logout from "../assets/logout.png"; 
+import StockCalculator from "./StockCalculator"; // Tool component
+import StockComparison from "./StockComparison"; // Tool component
+import InvestmentSimulator from "./InvestmentSimulator"; // Tool component
 import calculater from "../assets/calculater.png";
 import axios from "axios";
 
 function InteractiveTools() {
-  const [currentTool, setCurrentTool] = useState("calculator"); // Default tool is stock calculator
+  // State to track which tool is currently selected (default: calculator)
+  const [currentTool, setCurrentTool] = useState("calculator"); 
+  // State to control logout confirmation modal visibility
+  const [showSureModal, setShowSureModal] = useState(false);
+  
+  const navigate = useNavigate();
 
-  // Functions to switch between tools
+  /**
+   * Tool selection handlers - switch between different tools
+   */
   const handleCalculatorClick = () => setCurrentTool("calculator");
   const handleComparisonClick = () => setCurrentTool("comparison");
   const handleSimulatorClick = () => setCurrentTool("simulator");
-  const navigate = useNavigate();
 
-  // Handle notification click (optional)
+  /**
+   * Handle notification bell click - displays a simple alert
+   */
   const handleAlertClick = () => {
     alert("Notification button clicked!");
   };
 
+  /**
+   * Navigation handlers - navigate to different sections of the app
+   */
   const handleStockBoardClick = () => {
-    navigate("/stockboard");
+    navigate("/UserProfiles");
   };
 
   const handleNewsAndInsightsClick = () => {
@@ -44,44 +61,55 @@ function InteractiveTools() {
     navigate("/contact-us");
   };
 
-  const handleUserPreferencesClick = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Get token from localStorage or cookies
-      if (!token) {
-        alert("Authentication token is missing. Please log in again.");
-        return;
-      }
-
-      const response = await axios.get("http://localhost:3001/get-portfolio", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response && response.data) {
-        alert(
-          "You already have a portfolio, delete the current one to create a new one"
-        );
-        return;
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        // Portfolio not found, allow navigation
-        navigate("/user-preferences");
-      } else {
-        console.error("Error checking portfolio:", error.message);
-        alert("An error occurred while checking your portfolio.");
-      }
-    }
+  /**
+   * Closes the logout confirmation modal
+   */
+  const handleCloseSureModal = () => {
+    setShowSureModal(false);
   };
 
+  /**
+   * Handles user logout
+   * Removes all relevant items from localStorage and redirects to home page
+   */
   const handleLogoutClick = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("stockData");
-    localStorage.removeItem("priceBuy")
+    localStorage.removeItem("priceBuy");
+    localStorage.removeItem("storedFor");
     navigate("/");
   };
 
   return (
     <div>
+      {/* Logout Confirmation Modal */}
+      {showSureModal && (
+        <div className="modal-overlay">
+          <div className="modal-content-delete">
+            <span className="close-modal" onClick={handleCloseSureModal}>
+              &times;
+            </span>
+            <div className="form-container">
+              <div>
+                <h2>Are you sure?</h2>
+                <button
+                  onClick={handleLogoutClick}
+                  className="button-formal-delete-yes"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={handleCloseSureModal}
+                  className="button-formal-delete-no"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header Section */}
       <header className="header">
         <div className="left-section">
@@ -102,16 +130,12 @@ function InteractiveTools() {
       </header>
 
       <div className="container">
-        {/* Sidebar Menu */}
+        {/* Sidebar Navigation Menu */}
         <aside className="sidebar">
           <nav className="menu">
             <a href="#" onClick={handleStockBoardClick}>
               <img src={dashboardIcon} alt="Dashboard" className="menu-icon" />
               Dashboard
-            </a>
-            <a href="#" onClick={handleUserPreferencesClick}>
-              <img src={userIcon} alt="User Preference" className="menu-icon" />
-              User Preference
             </a>
             <a href="#" onClick={handleNewsAndInsightsClick}>
               <img
@@ -133,18 +157,18 @@ function InteractiveTools() {
               <img src={sendIcon} alt="Contact Us" className="menu-icon" />
               Contact Us
             </a>
-            <a href="#" onClick={handleLogoutClick}>
+            <a href="#" onClick={() => setShowSureModal(true)}>
               <img src={logout} alt="Logout" className="menu-icon" />
               Logout
             </a>
           </nav>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content Area */}
         <main className="content">
           <h2>Interactive Tools</h2>
 
-          {/* Tool Selection */}
+          {/* Tool Selection Buttons */}
           <div className="button-container">
             <button onClick={handleCalculatorClick}>Stock Calculator</button>
             <button onClick={handleComparisonClick}>
@@ -153,7 +177,7 @@ function InteractiveTools() {
             <button onClick={handleSimulatorClick}>Investment Simulator</button>
           </div>
 
-          {/* Conditional Rendering Based on Tool */}
+          {/* Conditional Rendering of Selected Tool */}
           <div>
             {currentTool === "calculator" && <StockCalculator />}
             {currentTool === "comparison" && <StockComparison />}

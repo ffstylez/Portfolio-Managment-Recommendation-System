@@ -1,3 +1,8 @@
+/**
+ * Home.js
+ * This component is the landing page for the InsightPredict application.
+ * It provides a welcome message and user authentication functionality.
+ */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -8,6 +13,7 @@ import "./Home.css";
 const Home = () => {
   const navigate = useNavigate();
 
+  // States for auth modal and form inputs
   const [showModal, setShowModal] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -15,16 +21,26 @@ const Home = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
+  /**
+   * Check for existing authentication token on component mount
+   * Redirect to user profiles if already logged in
+   */
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      navigate("/stockboard");
+      navigate("/UserProfiles");
     }
   }, []);
 
+  /**
+   * Opens the login/signup modal
+   */
   const handleLoginClick = () => {
     setShowModal(true);
   };
 
+  /**
+   * Closes the modal and resets all form fields
+   */
   const handleCloseModal = () => {
     setShowModal(false);
     setEmail("");
@@ -33,20 +49,36 @@ const Home = () => {
     setError("");
   };
 
+  /**
+   * Switches the modal to signup mode
+   */
   const handleSwitchToSignUp = () => {
     setIsLogin(false);
   };
 
+  /**
+   * Switches the modal to login mode
+   */
   const handleSwitchToLogin = () => {
     setIsLogin(true);
   };
 
+  /**
+   * Validates email format using regex
+   * @param {string} email - The email to validate
+   * @returns {boolean} - Whether the email is valid
+   */
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  /**
+   * Handles login form submission
+   * Validates inputs, submits to API, and processes response
+   */
   const handleLogin = async () => {
+    // Form validation
     if (!email) {
       setError("Email is required.");
       return;
@@ -68,6 +100,7 @@ const Home = () => {
     }
 
     try {
+      // Submit login request to API
       const response = await fetch("http://localhost:3001/login", {
         method: "POST",
         headers: {
@@ -77,12 +110,14 @@ const Home = () => {
       });
 
       if (response.ok) {
+        // Handle successful login
         const data = await response.json();
         handleCloseModal();
         localStorage.setItem("token", data.token);
-        localStorage.setItem("email", email); 
-        navigate("/stockboard");
+        localStorage.setItem("email", email);
+        navigate("/UserProfiles");
       } else {
+        // Handle login error
         const errorText = await response.text();
         setError(errorText.message || "Invalid credentials");
       }
@@ -92,7 +127,12 @@ const Home = () => {
     }
   };
 
+  /**
+   * Handles signup form submission
+   * Validates inputs, submits to API, and processes response
+   */
   const handleSignup = async () => {
+    // Form validation
     if (!email) {
       setError("Email is required.");
       return;
@@ -114,6 +154,7 @@ const Home = () => {
     }
 
     try {
+      // Submit signup request to API
       const response = await fetch("http://localhost:3001/signup", {
         method: "POST",
         headers: {
@@ -124,9 +165,11 @@ const Home = () => {
 
       const data = await response.json();
       if (data.message === "This email is already active.") {
+        // Handle duplicate email error
         setError(data.message);
         // alert(data.message);
       } else {
+        // Handle successful signup
         // alert(data.message);
         setError("");
         setEmail("");
@@ -134,7 +177,7 @@ const Home = () => {
         setConfirmPassword("");
         navigate("/user-preferences", { state: { email } });
         localStorage.setItem("token", data.token);
-        localStorage.setItem("email", email); 
+        localStorage.setItem("email", email);
         handleCloseModal();
       }
     } catch (error) {
@@ -145,6 +188,7 @@ const Home = () => {
 
   return (
     <div className="home">
+      {/* Header with navigation */}
       <header className="header">
         <div className="left-section">
           <img src={logo} alt="InsightPredict Logo" className="site-logo" />
@@ -159,6 +203,7 @@ const Home = () => {
         </div>
       </header>
 
+      {/* Main welcome content */}
       <main className="main-content">
         <h1 className="welcome-text">
           Welcome to InsightPredict – where the future of your investments
@@ -170,82 +215,32 @@ const Home = () => {
         </p>
       </main>
 
+      {/* Login/Signup Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className={`modal-content ${isLogin ? "login" : "signup"}`}>
-            <span className="close-modal" onClick={handleCloseModal}>
-              &times;
-            </span>
             <div className="form-container">
-              {isLogin ? (
-                <>
-                  <h2>Login</h2>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    className="text-input"
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    className="text-input"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  {error && <p className="error-message">{error}</p>}
-                  <button onClick={handleLogin} className="button-formal">
-                    Login
-                  </button>
-                  <p>
-                    Don't have an account?{" "}
-                    <span
-                      onClick={handleSwitchToSignUp}
-                      className="toggle-link"
-                    >
-                      Sign up here
-                    </span>
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2>Sign Up</h2>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    className="text-input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    className="text-input"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    className="text-input"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-
-                  {error && <p className="error-message">{error}</p>}
-
-                  <button onClick={handleSignup} className="button-formal">
-                    Sign Up
-                  </button>
-                  <p>
-                    Already have an account?{" "}
-                    <span onClick={handleSwitchToLogin} className="toggle-link">
-                      Login here
-                    </span>
-                  </p>
-                </>
-              )}
+              <>
+                <h2>Login</h2>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  className="text-input"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="text-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {error && <p className="error-message">{error}</p>}
+                <button onClick={handleLogin} className="button-formal">
+                  Login
+                </button>
+              </>
             </div>
             <div className="image-container">
               <img
@@ -253,6 +248,13 @@ const Home = () => {
                 alt="Sign Illustration"
               />
             </div>
+            <span
+              className="home-close-modal"
+              style={{ alignSelf: "start", fontSize: "24px" }}
+              onClick={handleCloseModal}
+            >
+              &times;
+            </span>
           </div>
         </div>
       )}

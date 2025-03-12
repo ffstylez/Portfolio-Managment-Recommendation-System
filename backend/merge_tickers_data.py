@@ -1,3 +1,23 @@
+"""
+Merge Tickers Data Module
+
+This module combines multiple CSV files containing ticker financial data into a 
+single consolidated DataFrame. It handles data quality issues by filtering out 
+tickers and columns with excessive missing or zero values, and produces a summary 
+report of data quality.
+
+The main data processing steps are:
+1. Merge all CSV files into a single DataFrame
+2. Filter out tickers with poor data quality
+3. Filter out columns with poor data quality
+4. Create a detailed summary of missing and zero values
+5. Save the processed data and summary to CSV files
+
+Usage:
+    Run this script directly to process all CSV files in the 'Processed_Ticker_Data' directory
+    and output 'processed_data.csv' and 'missing_values_summary.csv'.
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -6,7 +26,15 @@ from pathlib import Path
 def merge_csv_files(data_dir='Processed_Ticker_Data'):
     """
     Merge all CSV files from the specified directory into a single DataFrame.
-    Each file name is expected to start with a ticker symbol.
+    
+    Each file name is expected to start with a ticker symbol. The function adds
+    'ticker' and 'time_idx' columns for identification and time series processing.
+    
+    Args:
+        data_dir (str): Directory containing CSV files to merge
+        
+    Returns:
+        pandas.DataFrame: Merged DataFrame with all ticker data
     """
     dataframes = []
     for file_name in os.listdir(data_dir):
@@ -29,6 +57,16 @@ def merge_csv_files(data_dir='Processed_Ticker_Data'):
 def filter_tickers_by_data_quality(df, threshold=0.80):
     """
     Filter out tickers with too many missing or zero values.
+    
+    Computes the ratio of non-zero, non-null values to total values for each ticker
+    and keeps only tickers with a ratio above the specified threshold.
+    
+    Args:
+        df (pandas.DataFrame): DataFrame containing ticker data
+        threshold (float): Minimum ratio of good values required to keep a ticker
+        
+    Returns:
+        pandas.DataFrame: Filtered DataFrame containing only quality tickers
     """
     ticker_ratios = []
     for ticker, group in df.groupby('ticker'):
@@ -45,6 +83,16 @@ def filter_tickers_by_data_quality(df, threshold=0.80):
 def filter_columns_by_data_quality(df, threshold=0.79):
     """
     Filter out columns with too many missing or zero values.
+    
+    Computes the ratio of non-zero, non-null values to total values for each column
+    and keeps only columns with a ratio above the specified threshold.
+    
+    Args:
+        df (pandas.DataFrame): DataFrame with ticker data
+        threshold (float): Minimum ratio of good values required to keep a column
+        
+    Returns:
+        pandas.DataFrame: Filtered DataFrame containing only quality columns
     """
     numeric_cols = df.select_dtypes(include=np.number).columns.drop(['Date', 'ticker'], errors='ignore')
     col_ratios = []
@@ -63,6 +111,15 @@ def filter_columns_by_data_quality(df, threshold=0.79):
 def create_missing_zero_summary(df):
     """
     Create a summary of missing and zero values per ticker per column.
+    
+    This function generates a detailed report showing the count of missing or zero
+    values for each ticker and column, plus a total row summarizing all issues.
+    
+    Args:
+        df (pandas.DataFrame): DataFrame to analyze
+        
+    Returns:
+        pandas.DataFrame: Summary DataFrame with missing/zero counts
     """
     columns_to_check = [col for col in df.columns if col != 'ticker']
     grouped_counts = df.groupby('ticker')[columns_to_check].apply(
@@ -97,6 +154,16 @@ def create_missing_zero_summary(df):
 
 
 def main():
+    """
+    Main function to process and merge ticker data files.
+    
+    This function:
+    1. Merges all CSV files into a single DataFrame
+    2. Filters tickers with poor data quality
+    3. Filters columns with poor data quality
+    4. Creates a summary of missing/zero values
+    5. Saves the processed data and summary to CSV files
+    """
     # Merge all CSV files
     print("Merging CSV files...")
     combined_df = merge_csv_files()

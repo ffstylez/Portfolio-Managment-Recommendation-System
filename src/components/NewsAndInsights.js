@@ -1,3 +1,8 @@
+/**
+ * NewsAndInsights.js
+ * This component fetches and displays financial news articles from the NewsAPI.
+ * It provides users with the latest financial news and market insights.
+ */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./NewsAndInsights.css";
@@ -11,22 +16,34 @@ import logout from "../assets/logout.png";
 import calculater from "../assets/calculater.png";
 import axios from "axios";
 
-const NEWS_API_KEY = "7574195e62c64542bdd5f4bb5e8f69af"; // Replace with your NewsAPI key
+const NEWS_API_KEY = "7574195e62c64542bdd5f4bb5e8f69af"; // NewsAPI key
 
 function NewsAndInsights() {
-  const [newsArticles, setNewsArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // State variables
+  const [newsArticles, setNewsArticles] = useState([]); // Stores fetched news articles
+  const [loading, setLoading] = useState(true); // Loading state for API calls
+  const [error, setError] = useState(null); // Error state
+  const [showSureModal, setShowSureModal] = useState(false); // Logout confirmation modal state
+  
   const navigate = useNavigate(); // React Router hook for navigation
 
+  /**
+   * Closes the logout confirmation modal
+   */
+  const handleCloseSureModal = () => {
+    setShowSureModal(false);
+  };
+
+  /**
+   * Fetch news articles from NewsAPI on component mount
+   */
   useEffect(() => {
-    // Fetch news from the NewsAPI
     const fetchNews = async () => {
       try {
         const response = await axios.get("https://newsapi.org/v2/everything", {
           params: {
-            q: "stocks OR finance OR market", // Search query for stock/financial news
-            pageSize: 5, // Limit the number of articles displayed
+            q: "stocks OR finance OR market", // Search query for financial news
+            pageSize: 5, // Limit to 5 articles
             apiKey: NEWS_API_KEY,
           },
         });
@@ -42,64 +59,82 @@ function NewsAndInsights() {
     fetchNews();
   }, []);
 
+  /**
+   * Handles notification bell click
+   * Displays a simple alert
+   */
   const handleAlertClick = () => {
     alert("Notification button clicked!");
   };
 
+  /**
+   * Navigation handlers - navigate to different sections of the app
+   */
   const handleStockBoardClick = () => {
-    navigate("/stockboard");
+    navigate("/UserProfiles");
   };
+  
   const handleInteractiveToolsClick = () => {
     navigate("/InteractiveTools");
   };
+  
   const handleContactClick = () => {
     navigate("/Contact-Us");
   };
+  
+  /**
+   * Handles user logout
+   * Removes authentication tokens and redirects to home page
+   */
   const handleLogoutClick = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("stockData");
-    localStorage.removeItem("priceBuy")
+    localStorage.removeItem("priceBuy");
+    localStorage.removeItem("storedFor");
     navigate("/");
   };
-  const handleUserPreferencesClick = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Get token from localStorage or cookies
-      if (!token) {
-        alert("Authentication token is missing. Please log in again.");
-        return;
-      }
 
-      const response = await axios.get("http://localhost:3001/get-portfolio", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response && response.data) {
-        alert(
-          "You already have a portfolio, delete the current one to create a new one"
-        );
-        return;
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        // Portfolio not found, allow navigation
-        navigate("/user-preferences");
-      } else {
-        console.error("Error checking portfolio:", error.message);
-        alert("An error occurred while checking your portfolio.");
-      }
-    }
-  };
-
+  // Display loading indicator while fetching news
   if (loading) {
     return <div>Loading news...</div>;
   }
 
+  // Display error message if news fetch fails
   if (error) {
     return <div>{error}</div>;
   }
 
   return (
     <div>
+      {/* Logout Confirmation Modal */}
+      {showSureModal && (
+        <div className="modal-overlay">
+          <div className="modal-content-delete">
+            <span className="close-modal" onClick={handleCloseSureModal}>
+              &times;
+            </span>
+            <div className="form-container">
+              <div>
+                <h2>Are you sure?</h2>
+                <button
+                  onClick={handleLogoutClick}
+                  className="button-formal-delete-yes"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={handleCloseSureModal}
+                  className="button-formal-delete-no"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Header Section */}
       <header className="header">
         <div className="left-section">
           <img src={logo} alt="InsightPredict Logo" className="site-logo" />
@@ -117,16 +152,14 @@ function NewsAndInsights() {
           </div>
         </div>
       </header>
+      
       <div className="container">
+        {/* Sidebar Navigation */}
         <aside className="sidebar">
           <nav className="menu">
             <a href="#" onClick={handleStockBoardClick}>
               <img src={dashboardIcon} alt="Dashboard" className="menu-icon" />
               Dashboard
-            </a>
-            <a href="#" onClick={handleUserPreferencesClick}>
-              <img src={userIcon} alt="User Preference" className="menu-icon" />
-              User Preference
             </a>
             <a href="#">
               <img
@@ -148,12 +181,14 @@ function NewsAndInsights() {
               <img src={sendIcon} alt="Contact Us" className="menu-icon" />
               Contact Us
             </a>
-            <a href="#" onClick={handleLogoutClick}>
+            <a href="#" onClick={() => setShowSureModal(true)}>
               <img src={logout} alt="Logout" className="menu-icon" />
               Logout
             </a>
           </nav>
         </aside>
+        
+        {/* Main Content - News Articles */}
         <main className="content">
           <h2 className="title">Latest News and Insights</h2>
           <div className="news-list">

@@ -1,25 +1,39 @@
+/**
+ * index.js
+ * Express server that handles user preferences for the InsightPredict application.
+ * Provides an endpoint to save user preferences as CSV files.
+ */
+
+// Import required dependencies
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const Papa = require('papaparse');
 
+// Initialize Express app
 const app = express();
 const PORT = 5000;
 
-// Middleware to parse JSON bodies
+// Configure middleware to parse JSON request bodies
 app.use(bodyParser.json());
 
-// Endpoint to receive preferences and save as CSV
+/**
+ * POST /save-preferences
+ * Endpoint to receive user preferences and save them as a CSV file
+ * 
+ * @param {Object} req.body - JSON object containing user preferences
+ * @returns {string} - Success or error message
+ */
 app.post('/save-preferences', (req, res) => {
   const preferences = req.body;
 
-  // Convert preferences to CSV format
+  // Convert preferences object to CSV format
   const csv = Papa.unparse([preferences], {
     header: true,
   });
 
-  // Path to save the CSV file
+  // Define file path for saving the CSV
   const filePath = path.join(
     __dirname,
     '..',
@@ -29,7 +43,7 @@ app.post('/save-preferences', (req, res) => {
     'user-preferences.csv'
   );
 
-  // Save the CSV file
+  // Write CSV data to file
   fs.writeFile(filePath, csv, (err) => {
     if (err) {
       console.error('Error saving CSV:', err);

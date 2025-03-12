@@ -1,5 +1,11 @@
+/**
+ * UserPreferences.js
+ * This component provides a questionnaire to collect user risk tolerance and investment preferences.
+ * The collected data is used to generate personalized investment portfolios.
+ */
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { TailSpin } from "react-loader-spinner";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import "./UserPreferences.css";
 import logo from "../assets/logo.png";
 import axios from "axios";
@@ -7,7 +13,9 @@ import axios from "axios";
 function UserPreferences() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("");
+  const { email } = useParams(); // Extract email from URL
+  
+  // State variables
   const [responses, setResponses] = useState({
     familiar: "",
     portfolioDrop: "",
@@ -20,34 +28,24 @@ function UserPreferences() {
     initialInvestment: "",
     portfolioSize: "",
   });
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(""); // Error message
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [progress, setProgress] = useState(0); // Form completion progress
+  const [isModalOpen, setIsModalOpen] = useState(true); // Welcome modal visibility
 
-  useEffect(() => {
-    async function getEmail() {
-      const token = localStorage.getItem("token"); // Get token from localStorage or cookies
-      const response = await fetch("http://localhost:3001/get-email", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEmail(data.email);
-      } else {
-        console.error("Failed to fetch email");
-      }
-    }
-    getEmail();
-  }, []);
-
+  /**
+   * Updates the response state when a user selects an answer
+   * @param {string} question - Question identifier
+   * @param {string} answer - Selected answer value
+   */
   const handleSelect = (question, answer) => {
     setResponses((prev) => ({ ...prev, [question]: answer }));
   };
 
+  /**
+   * Validates that all questions have been answered
+   * @returns {boolean} - True if form is valid, false otherwise
+   */
   const validateForm = () => {
     for (const [key, value] of Object.entries(responses)) {
       if (!value) {
@@ -61,6 +59,11 @@ function UserPreferences() {
     return true;
   };
 
+  /**
+   * Handles form submission
+   * Validates form, sends data to API, and navigates to profile page on success
+   * @param {Event} event - Form submission event
+   */
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
@@ -69,6 +72,7 @@ function UserPreferences() {
       return;
     }
 
+    // Prepare data for API
     const preferences = {
       email,
       ...responses,
@@ -78,10 +82,12 @@ function UserPreferences() {
     setErrorMessage("");
 
     try {
+      // Send preferences to API
       const response = await fetch("http://localhost:3001/save-preferences", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("token"),
         },
         body: JSON.stringify(preferences),
       });
@@ -91,7 +97,7 @@ function UserPreferences() {
       }
 
       alert("Preferences saved successfully!");
-      navigate("/stockboard");
+      navigate("/UserProfiles");
     } catch (error) {
       console.error("Error saving preferences:", error);
       setErrorMessage("There was an error saving your preferences.");
@@ -100,17 +106,23 @@ function UserPreferences() {
     }
   };
 
+  /**
+   * Closes the welcome modal
+   */
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
   return (
     <div className="user-preferences">
+      {/* Header */}
       <header className="header">
         <div className="left-section">
           <img src={logo} alt="InsightPredict Logo" className="site-logo" />
         </div>
       </header>
+      
+      {/* Welcome Modal */}
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -130,7 +142,7 @@ function UserPreferences() {
         <main className="content">
           <h2>Risk Tolerance Questionnaire</h2>
           <form onSubmit={handleFormSubmit} className="preference-form">
-            {/* Email */}
+            {/* Email Display (Read-only) */}
             <div className="form-group">
               <label>Email:</label>
               <input
@@ -141,7 +153,7 @@ function UserPreferences() {
               />
             </div>
 
-            {/* Questions */}
+            {/* Question 1: Market Familiarity */}
             <div className="form-group">
               <label>
                 How familiar are you with the stock market, bonds, derivatives,
@@ -174,6 +186,8 @@ function UserPreferences() {
                 </div>
               </div>
             </div>
+            
+            {/* Question 2: Portfolio Drop Reaction */}
             <div className="form-group">
               <label>
                 If your portfolio dropped by 10% in one month, how would you
@@ -194,7 +208,7 @@ function UserPreferences() {
                   }`}
                   onClick={() => handleSelect("portfolioDrop", "2")}
                 >
-                  Somewhat concerned—but I’d monitor before taking action
+                  Somewhat concerned—but I'd monitor before taking action
                 </div>
                 <div
                   className={`card ${
@@ -207,6 +221,7 @@ function UserPreferences() {
               </div>
             </div>
 
+            {/* Question 3: Risk Tolerance */}
             <div className="form-group">
               <label>
                 How do you feel about taking risks in your investments?
@@ -234,12 +249,13 @@ function UserPreferences() {
                   }`}
                   onClick={() => handleSelect("riskInvestments", "3")}
                 >
-                  I’m comfortable taking high risks for the chance of high
+                  I'm comfortable taking high risks for the chance of high
                   returns.
                 </div>
               </div>
             </div>
 
+            {/* Question 4: Returns vs Volatility */}
             <div className="form-group">
               <label>
                 Which scenario aligns best with your preference for returns and
@@ -273,6 +289,7 @@ function UserPreferences() {
               </div>
             </div>
 
+            {/* Question 5: Drawdown Tolerance (1 Month) */}
             <div className="form-group">
               <label>
                 What level of portfolio drawdown would you feel comfortable
@@ -305,6 +322,8 @@ function UserPreferences() {
                 </div>
               </div>
             </div>
+            
+            {/* Question 6: Drawdown Tolerance (2 Months) */}
             <div className="form-group">
               <label>
                 What level of portfolio drawdown would you feel comfortable
@@ -337,6 +356,8 @@ function UserPreferences() {
                 </div>
               </div>
             </div>
+            
+            {/* Question 7: Drawdown Tolerance (3 Months) */}
             <div className="form-group">
               <label>
                 What level of portfolio drawdown would you feel comfortable
@@ -370,6 +391,7 @@ function UserPreferences() {
               </div>
             </div>
 
+            {/* Investment Horizon Dropdown */}
             <div className="form-group">
               <label>Select Investment Horizon:</label>
               <select
@@ -391,6 +413,8 @@ function UserPreferences() {
                 <option value="12">12 Months</option>
               </select>
             </div>
+            
+            {/* Portfolio Size Dropdown */}
             <div className="form-group">
               <label>Portfolio Size:</label>
               <select
@@ -406,6 +430,8 @@ function UserPreferences() {
                 <option value="25">25 Companies</option>
               </select>
             </div>
+            
+            {/* Initial Investment Input */}
             <div className="form-group">
               <label>Initial Investment:</label>
               <input
@@ -430,6 +456,22 @@ function UserPreferences() {
                 className="dropdown"
               ></input>
             </div>
+            
+            {/* Loading Spinner */}
+            {isLoading ? (
+              <TailSpin
+                visible={true}
+                height="200"
+                width="200"
+                color="#4fa94d"
+                ariaLabel="tail-spin-loading"
+                radius="1"
+                wrapperStyle={{ margin: "auto" }}
+                wrapperClass=""
+              />
+            ) : (
+              ""
+            )}
 
             {/* Submit Button */}
             <button
@@ -439,6 +481,8 @@ function UserPreferences() {
             >
               {isLoading ? "Saving..." : "Save Preferences"}
             </button>
+            
+            {/* Error Message Display */}
             {errorMessage && <p className="error-message">{errorMessage}</p>}
           </form>
         </main>

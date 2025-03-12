@@ -1,3 +1,22 @@
+"""
+Merge Ticker Data Module
+
+This module combines price data and fundamental financial data for individual 
+stock tickers. It handles the common challenge of misaligned dates between price 
+and fundamental data sources by implementing a date-matching algorithm and filling 
+missing values with the most recent available data.
+
+The main processing steps for each ticker are:
+1. Load price and fundamental data files
+2. Create a complete timeline with all dates from both sources
+3. For each date, fill missing data with values from the closest previous date
+4. Save the merged data to a CSV file
+
+Usage:
+    Run this script directly to process all matching tickers in the price_data and
+    Merged_fundamental_Data folders, saving results to the specified output folder.
+"""
+
 import pandas as pd
 import os
 from pathlib import Path
@@ -5,6 +24,17 @@ from pathlib import Path
 def load_and_prepare_data(price_path, fundamental_path, ticker):
     """
     Load and prepare price and fundamental data for a given ticker.
+    
+    This function loads both datasets, removes unneeded columns from the price data,
+    converts date columns to datetime format, and ensures both datasets are sorted by date.
+    
+    Args:
+        price_path (str): Path to the directory containing price data files
+        fundamental_path (str): Path to the directory containing fundamental data files
+        ticker (str): Ticker symbol to process
+        
+    Returns:
+        tuple: A tuple containing (price_df, fundamental_df)
     """
     # Load both datasets
     price_df = pd.read_csv(f"{price_path}/{ticker}_price_data.csv")

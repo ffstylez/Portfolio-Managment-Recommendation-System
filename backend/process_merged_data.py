@@ -1,3 +1,20 @@
+"""
+Process Merged Data
+
+This module standardizes and processes financial data from merged ticker CSV files.
+It handles irregular data intervals by generating evenly spaced samples and
+distributes values across null entries to create a more consistent dataset
+suitable for machine learning applications.
+
+The module performs two main operations:
+1. Standardizing data intervals to ensure consistent spacing between data points
+2. Processing null values by distributing non-null values across consecutive null entries
+
+Usage:
+    Run this script directly to process all CSV files in the INPUT_FOLDER 
+    and save the results to the OUTPUT_FOLDER.
+"""
+
 import os
 import pandas as pd
 import numpy as np
@@ -10,10 +27,33 @@ START_COLUMN = 'Cash On Hand'
 ROWS_BETWEEN = 30
 
 def calculate_even_indices(start_idx, end_idx, num_points):
+    """
+    Generate evenly spaced indices between a start and end index.
+    
+    Args:
+        start_idx (int): The starting index
+        end_idx (int): The ending index
+        num_points (int): The number of points to generate between start and end
+    
+    Returns:
+        list: A list of evenly spaced integer indices
+    """
     all_points = np.linspace(start_idx, end_idx, num_points + 2)
     return [int(round(x)) for x in all_points[1:-1]]
 
 def standardize_intervals(df, target_columns):
+    """
+    Create evenly spaced intervals in the dataset by selecting specific rows to keep.
+    
+    This function ensures exactly ROWS_BETWEEN points between consecutive non-null values.
+    
+    Args:
+        df (pandas.DataFrame): The input DataFrame to process
+        target_columns (list): List of column names to check for non-null values
+    
+    Returns:
+        pandas.DataFrame: A new DataFrame with standardized intervals
+    """
     # Create a mask for rows where any target column has a non-null value
     non_null_mask = df[target_columns].notna().any(axis=1)
     
@@ -51,6 +91,19 @@ def standardize_intervals(df, target_columns):
     return df.loc[sorted(set(indices_to_keep))].reset_index(drop=True)
 
 def process_dataframe(df, target_columns):
+    """
+    Process non-null and non-zero values in specified columns by distributing 
+    a single value across consecutive null entries.
+    
+    This ensures the total value is preserved while spreading it evenly across time periods.
+    
+    Args:
+        df (pandas.DataFrame): The input DataFrame to process
+        target_columns (list): List of column names to process
+    
+    Returns:
+        pandas.DataFrame: A processed DataFrame with values distributed across nulls
+    """
     # Create a copy to avoid modifying the original DataFrame
     processed_df = df.copy()
     
@@ -87,6 +140,17 @@ def process_dataframe(df, target_columns):
     return processed_df
 
 def main():
+    """
+    Main function that processes all CSV files in the input directory.
+    
+    This function:
+    1. Checks if the input folder exists
+    2. Creates the output folder if needed
+    3. Processes each CSV file by:
+       - Standardizing intervals
+       - Processing null values
+       - Saving to the output directory
+    """
     # Check if the input folder exists
     if not os.path.isdir(INPUT_FOLDER):
         print(f"Error: The directory '{INPUT_FOLDER}' does not exist.")
